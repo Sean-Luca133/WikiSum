@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-
+﻿using DotNetEnv;
+using Microsoft.Extensions.Logging;
 namespace WikiSum
 {
     public static class MauiProgram
@@ -18,8 +18,7 @@ namespace WikiSum
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-            string languageKey = Environment.GetEnvironmentVariable("LANGUAGE_KEY");
-            Console.WriteLine(languageKey);
+            Env.Load();
 
             return builder.Build();
         }
