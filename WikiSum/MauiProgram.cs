@@ -16,8 +16,10 @@ namespace WikiSum
                 });
 
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
+            string languageKey = Environment.GetEnvironmentVariable("LANGUAGE_KEY");
+            Console.WriteLine(languageKey);
 
             return builder.Build();
         }
