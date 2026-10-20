@@ -1,4 +1,5 @@
 ﻿using DotNetEnv;
+using EchoTranslate.Services;
 using Microsoft.Extensions.Logging;
 using WikiSum.Services.Scrapping;
 namespace WikiSum
@@ -22,7 +23,6 @@ namespace WikiSum
             builder.Logging.AddDebug();
 #endif
             builder.Services.AddHttpClient<IScrapeService, ScrapeService>();
-
 
             return builder.Build();
         }
