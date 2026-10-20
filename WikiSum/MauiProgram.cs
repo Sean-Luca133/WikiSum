@@ -1,4 +1,5 @@
 ﻿using DotNetEnv;
+using EchoTranslate.Services;
 using Microsoft.Extensions.Logging;
 namespace WikiSum
 {
@@ -19,7 +20,7 @@ namespace WikiSum
             builder.Logging.AddDebug();
 #endif
             Env.Load();
-
+            Console.WriteLine(TranslationService.TranslateText("How are You?","en","nl"));
             return builder.Build();
         }
     }
