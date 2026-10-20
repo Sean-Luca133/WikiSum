@@ -1,11 +1,14 @@
 ﻿using DotNetEnv;
 using Microsoft.Extensions.Logging;
+using WikiSum.Services.Scrapping;
 namespace WikiSum
 {
     public static class MauiProgram
     {
         public static MauiApp CreateMauiApp()
         {
+            Env.Load();
+
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
@@ -18,7 +21,8 @@ namespace WikiSum
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-            Env.Load();
+            builder.Services.AddHttpClient<IScrapeService, ScrapeService>();
+
 
             return builder.Build();
         }
