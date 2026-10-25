@@ -1,6 +1,8 @@
 ﻿using DotNetEnv;
-using EchoTranslate.Services;
 using Microsoft.Extensions.Logging;
+using WikiSum.Services;
+using WikiSum.Services.Translation;
+using WikiSum.ViewModels;
 namespace WikiSum
 {
     public static class MauiProgram
@@ -20,7 +22,9 @@ namespace WikiSum
             builder.Logging.AddDebug();
 #endif
             Env.Load();
-            Console.WriteLine(TranslationService.TranslateText("How are You?","en","nl"));
+            builder.Services.AddTransient<ITranslationService, TranslationService>();
+            builder.Services.AddTransient<MainPage>();
+            builder.Services.AddTransient<IMainViewModel, MainViewModel>();
             return builder.Build();
         }
     }

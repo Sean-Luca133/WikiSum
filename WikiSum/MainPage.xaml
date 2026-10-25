@@ -2,11 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WikiSum.MainPage"
+             xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
+             x:DataType="viewModel:IMainViewModel"
              Title="MainPage">
     <VerticalStackLayout>
         <Label 
             Text="Welcome to .NET MAUI!"
             VerticalOptions="Center" 
             HorizontalOptions="Center" />
+        <Label Text="{Binding TestText}"/>
+        <Button Command="{Binding TranslateTestCommand}"/>
     </VerticalStackLayout>
 </ContentPage>

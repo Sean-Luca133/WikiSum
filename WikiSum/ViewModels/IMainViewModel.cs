@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Input;
 
 namespace WikiSum.ViewModels
 {
-    internal class IMainViewModel
+    public interface IMainViewModel
     {
+        ICommand TranslateTextCommand { get; set; }
+        ICommand TranslateTestCommand { get; set; }
+        string TestText { get; set; }
+
     }
 }
