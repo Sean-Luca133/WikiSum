@@ -11,6 +11,7 @@
             VerticalOptions="Center" 
             HorizontalOptions="Center" />
         <Label Text="{Binding TestText}"/>
-        <Button Command="{Binding TranslateTestCommand}"/>
+        <Button Text="Translation Test" Command="{Binding TranslateTestCommand}"/>
+        <Button Text="Summarize Test" Command="{Binding SummarizeTestcommand}"/>
     </VerticalStackLayout>
 </ContentPage>

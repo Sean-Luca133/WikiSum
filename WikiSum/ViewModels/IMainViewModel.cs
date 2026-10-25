@@ -9,6 +9,7 @@ namespace WikiSum.ViewModels
     {
         ICommand TranslateTextCommand { get; set; }
         ICommand TranslateTestCommand { get; set; }
+        ICommand SummarizeTestcommand { get; set; }
         string TestText { get; set; }
 
     }

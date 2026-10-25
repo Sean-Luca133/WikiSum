@@ -1,6 +1,7 @@
 ﻿using DotNetEnv;
 using Microsoft.Extensions.Logging;
 using WikiSum.Services;
+using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
 namespace WikiSum
@@ -23,6 +24,7 @@ namespace WikiSum
 #endif
             Env.Load();
             builder.Services.AddTransient<ITranslationService, TranslationService>();
+            builder.Services.AddTransient<ISummarizationService, SummarizationService>();
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<IMainViewModel, MainViewModel>();
             return builder.Build();
