@@ -1,7 +1,11 @@
 ﻿using DotNetEnv;
 using Microsoft.Extensions.Logging;
-using WikiSum.Services.Scrapping;
+using WikiSum.Services;
+using WikiSum.Services.Sumerization;
+using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
+using WikiSum.Services.Scrapping;
+
 namespace WikiSum
 {
     public static class MauiProgram
@@ -22,10 +26,14 @@ namespace WikiSum
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
+            Env.Load();
             builder.Services.AddHttpClient<IScrapeService, ScrapeService>();
-
+            builder.Services.AddTransient<ITranslationService, TranslationService>();
+            builder.Services.AddTransient<ISummarizationService, SummarizationService>();
+          
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<IMainViewModel, MainViewModel>();
+
 
             return builder.Build();
         }

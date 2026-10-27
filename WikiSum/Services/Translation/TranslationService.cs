@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WikiSum.Services.Translation;
 
-namespace EchoTranslate.Services
+namespace WikiSum.Services
 {
 
     public static class ApiTranslationKeys
@@ -14,9 +15,9 @@ namespace EchoTranslate.Services
         public static string TranslatorRegion = Environment.GetEnvironmentVariable("TRANSLATOR_REGION");
     }
 
-    public class TranslationService
+    public class TranslationService : ITranslationService
     {
-        public static async Task<string> TranslateText(string text, string fromLang, string toLang)
+        public async Task<string> TranslateText(string text, string fromLang, string toLang)
         {
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", ApiTranslationKeys.TranslatorKey);
