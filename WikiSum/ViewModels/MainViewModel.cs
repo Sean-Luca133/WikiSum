@@ -39,7 +39,7 @@ namespace WikiSum.ViewModels
 
         public async Task<List<string>?> GetWebsite()
         {
-            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Skylanders"));
+            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
 
 
         }

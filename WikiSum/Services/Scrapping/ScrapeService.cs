@@ -41,19 +41,22 @@ namespace WikiSum.Services.Scrapping
                 Debug.WriteLine("Message :{0} ", e.Message);
                 return null;
             }
-
-
         }
-        private List<string> PrepareResult()
+
+        private void GetHeadings(IDocument document)
         {
-            var parser = new HtmlParser();
-            List<string> result = new();
-            foreach (var tag in tags)
+            var links = document.QuerySelectorAll("nav[aria-label='Contents'] a");
+            foreach (var link in links)
             {
-                IDocument tagDocument = parser.ParseDocument(tag);
-                result.Add(ExtractUselessTags(tagDocument));
+                string content = link.TextContent.Trim();
+                if (content.Split("\t")[0].Contains("."))
+                {
+                    continue;
+                }
+                string? url = link.GetAttribute("href");
+                Debug.WriteLine($"Tekst: {content} | URL: {url}");
+                headings.Enqueue(link);
             }
-            return result;
         }
         private void SetTags(IDocument document)
         {
@@ -129,6 +132,17 @@ namespace WikiSum.Services.Scrapping
             return string.Join(" ", content);
         }
 
+        private List<string> PrepareResult()
+        {
+            var parser = new HtmlParser();
+            List<string> result = new();
+            foreach (var tag in tags)
+            {
+                IDocument tagDocument = parser.ParseDocument(tag);
+                result.Add(ExtractUselessTags(tagDocument));
+            }
+            return result;
+        }
         private string ExtractUselessTags(IDocument document)
         {
             // Verwijder elementen die geen nuttige tekst bevatten
@@ -143,22 +157,6 @@ namespace WikiSum.Services.Scrapping
 
             Debug.WriteLine($"[ScrapeService]: Cleaned tekst: {text}");
             return text;
-        }
-
-        private void GetHeadings(IDocument document)
-        {
-            var links = document.QuerySelectorAll("nav[aria-label='Contents'] a");
-            foreach (var link in links)
-            {
-                string content = link.TextContent.Trim();
-                if (content.Split("\t")[0].Contains("."))
-                {
-                    continue;
-                }
-                string? url = link.GetAttribute("href");
-                Debug.WriteLine($"Tekst: {content} | URL: {url}");
-                headings.Enqueue(link);
-            }
         }
     }
 }
