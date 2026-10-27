@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WikiSum.Views.MainPage"
+             xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
+             x:DataType="viewModel:IMainViewModel"
+             Title="MainPage">
+
+    <ContentPage.ToolbarItems >
+        <ToolbarItem Text="Search" Command="{Binding SearchCommand}" />
+        <ToolbarItem Text="Translate" Command="{Binding TranslateTestCommand}" />
+        <ToolbarItem Text="Summerize" Command="{Binding SummarizeTestCommand}" />
+    </ContentPage.ToolbarItems>
+    <VerticalStackLayout>
+        <Label 
+            Text="Welcome to WikiSum"
+            FontSize="24"
+            FontAttributes="Bold"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center" />
+
+        <Image Source="wikisum_logo.png" 
+               SemanticProperties.Description="WikiSum logo"
+               Aspect="AspectFit" 
+               HeightRequest="250"/>
+        <Label FontSize="16" Margin="0,20,0,0" MaximumWidthRequest="650" HorizontalTextAlignment="Center"  Text="This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description." VerticalOptions="End" />
+
+    </VerticalStackLayout>
+</ContentPage>

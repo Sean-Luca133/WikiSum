@@ -5,6 +5,7 @@ using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
 using WikiSum.Services.Scrapping;
+using WikiSum.Views;
 
 namespace WikiSum
 {

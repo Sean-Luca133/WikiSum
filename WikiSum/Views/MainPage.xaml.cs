@@ -1,6 +1,6 @@
 using WikiSum.ViewModels;
 
-namespace WikiSum;
+namespace WikiSum.Views;
 
 public partial class MainPage : ContentPage
 {
