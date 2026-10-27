@@ -91,6 +91,7 @@ namespace WikiSum.ViewModels
             {
                 foreach (ExtractiveSummarizeResult documentResult in documents)
                 {
+                    // Error check
                     if (documentResult.HasError)
                     {
                         Debug.WriteLine($"  Error!");
