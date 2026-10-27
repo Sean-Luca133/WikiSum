@@ -2,15 +2,40 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WikiSum.Views.SummaryPage"
+             xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
+             x:DataType="viewModel:IMainViewModel"
              Title="SummaryPage">
     <VerticalStackLayout>
         <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-        <Entry Text="Wiki Url"
-   Placeholder="https://"/>
-        
+            Text="Select your page to Summarize"
+           FontSize="24"
+           FontAttributes="Bold"
+           VerticalOptions="Center" 
+           HorizontalOptions="Center" />
+        <HorizontalStackLayout HorizontalOptions="Center" Margin="0,20,0,0" Spacing="15">
+            <Label Text="Wiki Url" 
+                   FontSize="16"
+                   FontAttributes="Bold" 
+                   VerticalOptions="Center"
+                   />
+        <Entry Text="" 
+               MinimumWidthRequest="250"
+               Placeholder="https://"/>
+
+            <Picker Title="Language" MinimumWidthRequest="200">
+                <Picker.Items>
+                    <x:String>English</x:String>
+                    <x:String>Dutch</x:String>
+                    <x:String>French</x:String>
+                </Picker.Items>
+            </Picker>
+
+            <Button Command="{Binding SearchCommand}" Text="Search"/>
+        </HorizontalStackLayout>
+
+        <Label Text="" 
+               VerticalOptions="Center" 
+               HorizontalOptions="Center"/>
 
     </VerticalStackLayout>
 </ContentPage>

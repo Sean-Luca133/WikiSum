@@ -6,16 +6,16 @@
     xmlns:views="clr-namespace:WikiSum.Views"
     Title="WikiSum">
     <TabBar>
-    <ShellContent
+        <ShellContent
         Title="Home"
         Icon="home.png"
         ContentTemplate="{DataTemplate views:MainPage}"
         Route="MainPage" />
-    <ShellContent
+        <ShellContent
         Title="Summerize"
         Icon="writing.png"
         ContentTemplate="{DataTemplate views:SummaryPage}"
         Route="MainPage" />
-     </TabBar>
+    </TabBar>
 
 </Shell>
