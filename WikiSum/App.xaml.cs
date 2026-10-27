@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace WikiSum
+﻿namespace WikiSum
 {
     public partial class App : Application
     {

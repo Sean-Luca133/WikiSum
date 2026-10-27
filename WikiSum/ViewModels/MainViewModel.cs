@@ -1,4 +1,3 @@
-﻿
 using Azure.AI.TextAnalytics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,26 +8,43 @@ using System.Text;
 using System.Windows.Input;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
+using WikiSum.Services.Scrapping;
 
 namespace WikiSum.ViewModels
 {
     public class MainViewModel : ObservableObject, IMainViewModel 
     {
-        public ICommand TranslateTextCommand { get; set; }
+        private IScrapeService _scrapeService;
         private ITranslationService _translationService;
         private ISummarizationService _summarizationService;
+        
+        public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
         public ICommand TranslateTestCommand { get; set; }
         public ICommand SummarizeTestcommand { get; set; }
+        public ICommand SearchCommand { get; set; }
+        
 
-        public MainViewModel(ITranslationService translationService,ISummarizationService summarizationService)
+        public MainViewModel(ITranslationService translationService,ISummarizationService summarizationService, IScrapeService scrapeService)
         {
             _translationService = translationService;
             _summarizationService = summarizationService;
+            _scrapeService = scrapeService;
+            BindCommands();
+            
+        }
+        public void BindCommands()
+        {
+            SearchCommand = new AsyncRelayCommand(GetWebsite);
             TranslateTestCommand = new AsyncRelayCommand(TranslateTest);
             SummarizeTestcommand = new AsyncRelayCommand(SummarizeTest);
         }
 
+          public async Task GetWebsite()
+          {
+              await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Universally_unique_identifier"));
+          }
+          
 
         private async Task<string> TranslateText(string text, string start, string to)
         {
@@ -124,6 +140,5 @@ namespace WikiSum.ViewModels
             TestText = await TranslateText(TestText, "en", "nl");
             Debug.WriteLine(TestText);
         }
-
     }
 }
