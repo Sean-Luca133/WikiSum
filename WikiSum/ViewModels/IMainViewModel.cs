@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Windows.Input;
 
 namespace WikiSum.ViewModels
 {
-    internal class IMainViewModel
+    public interface IMainViewModel
     {
+        ICommand SearchCommand { get; set; }
+
+        Task GetWebsite();
     }
 }
