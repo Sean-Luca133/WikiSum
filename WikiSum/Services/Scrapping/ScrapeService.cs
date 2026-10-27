@@ -33,22 +33,17 @@ namespace WikiSum.Services.Scrapping
                     .ToList()
                     .ForEach(element => element.Remove());
 
-                foreach(var comment in document.All.OfType<AngleSharp.Dom.IComment>().ToList())
-                {
-                    comment.Remove();
-                }
                 // Haal alle tekst uit het document
                 var text = document.Body?.TextContent ?? string.Empty;
 
                 // Normaliseer witruimte
-                text = Regex.Replace(text, @"\s+", "").Trim();
+                text = Regex.Replace(text, @"\s+", " ").Trim();
 
                 Console.WriteLine(text);
                 // Above three lines can be replaced with new helper method below
                 // string responseBody = await client.GetStringAsync(uri);
 
-                Debug.WriteLine(responseBody);
-                return responseBody;
+                return text;
             }
             catch (HttpRequestException e)
             {
