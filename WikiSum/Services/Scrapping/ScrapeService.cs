@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using AngleSharp;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace WikiSum.Services.Scrapping
 {
@@ -22,6 +24,26 @@ namespace WikiSum.Services.Scrapping
                 using HttpResponseMessage response = await _httpClient.GetAsync(requestUri);
                 response.EnsureSuccessStatusCode();
                 string responseBody = await response.Content.ReadAsStringAsync();
+                string html = responseBody;
+                var context = BrowsingContext.New(Configuration.Default);
+                var document = await context.OpenAsync(req => req.Content(html));
+
+                // Verwijder elementen die geen nuttige tekst bevatten
+                document.QuerySelectorAll("script, style, noscript, template,iframe,svg,canvas,header,footer,nav, aside")
+                    .ToList()
+                    .ForEach(element => element.Remove());
+
+                foreach(var comment in document.All.OfType<AngleSharp.Dom.IComment>().ToList())
+                {
+                    comment.Remove();
+                }
+                // Haal alle tekst uit het document
+                var text = document.Body?.TextContent ?? string.Empty;
+
+                // Normaliseer witruimte
+                text = Regex.Replace(text, @"\s+", "").Trim();
+
+                Console.WriteLine(text);
                 // Above three lines can be replaced with new helper method below
                 // string responseBody = await client.GetStringAsync(uri);
 

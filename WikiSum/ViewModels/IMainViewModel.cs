@@ -7,7 +7,7 @@ namespace WikiSum.ViewModels
 {
     public interface IMainViewModel
     {
-        Task GetWebsite();
+        Task<string> GetWebsite();
         ICommand SearchCommand { get; set; }
         ICommand TranslateTextCommand { get; set; }
         ICommand TranslateTestCommand { get; set; }

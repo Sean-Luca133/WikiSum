@@ -9,6 +9,8 @@ using System.Windows.Input;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.Services.Scrapping;
+using System.Text.RegularExpressions;
+
 
 namespace WikiSum.ViewModels
 {
@@ -17,7 +19,6 @@ namespace WikiSum.ViewModels
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
         private ISummarizationService _summarizationService;
-        
         public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
         public ICommand TranslateTestCommand { get; set; }
@@ -40,9 +41,16 @@ namespace WikiSum.ViewModels
             SummarizeTestcommand = new AsyncRelayCommand(SummarizeTest);
         }
 
-          public async Task GetWebsite()
+          public async Task<string> GetWebsite()
           {
-              await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Universally_unique_identifier"));
+            string? result = await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Universally_unique_identifier"));
+            if (!String.IsNullOrEmpty(result))
+            {
+                Debug.WriteLine($"[MainViewModel]: {result}");
+                return result;
+            }
+            return string.Empty;
+              
           }
           
 
@@ -95,6 +103,9 @@ namespace WikiSum.ViewModels
             + " to improve healthcare, being able to improve education, economic development is going to improve"
             + " the quality of life in the communities.”";
 
+            document = await GetWebsite();
+            Debug.WriteLine($"[MainViewModel]:{document.Length}");
+
             // Prepare the input of the text analysis operation. You can add multiple documents to this list and
             // perform the same operation on all of them simultaneously.
             List<string> batchedDocuments = new()
@@ -137,6 +148,7 @@ namespace WikiSum.ViewModels
         // method for testing the translation Check debug for translation
         private async Task TranslateTest()
         {
+            TestText = await GetWebsite();
             TestText = await TranslateText(TestText, "en", "nl");
             Debug.WriteLine(TestText);
         }

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,7 @@ namespace WikiSum.Services
             var response = await client.PostAsync(endpoint, content);
             var jsonResponse = await response.Content.ReadAsStringAsync();
 
+            Debug.WriteLine($"[TranslationService]: {jsonResponse}");
             var translation = JArray.Parse(jsonResponse)[0]["translations"][0]["text"]?.ToString();
             return translation ?? "(no translation)";
         }
