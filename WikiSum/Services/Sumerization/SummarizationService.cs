@@ -20,9 +20,11 @@ namespace WikiSum.Services.Sumerization
 
 
         // Perform the text analysis operation.
-        public async Task<ExtractiveSummarizeOperation> SummarizeText(List<string> document)
+        public async Task<AbstractiveSummarizeOperation> SummarizeText(List<string> document)
         {
-            return client.ExtractiveSummarize(WaitUntil.Completed, document);
+            AbstractiveSummarizeOptions options = new();
+            options.SentenceCount = 20;
+            return client.AbstractiveSummarize(WaitUntil.Completed, document,options:options);
         }
        
     };
