@@ -2,6 +2,6 @@
 {
     public interface ICanGetRequest
     {
-        Task<string?> GetRequestAsync(Uri requestUri);
+        Task<List<string>?> GetRequestAsync(Uri requestUri);
     }
 }

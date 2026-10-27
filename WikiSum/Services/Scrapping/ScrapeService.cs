@@ -1,4 +1,6 @@
 ﻿using AngleSharp;
+using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 
@@ -6,6 +8,9 @@ namespace WikiSum.Services.Scrapping
 {
     public class ScrapeService : IScrapeService
     {
+        private Queue<AngleSharp.Dom.IElement> headings = new();
+        private List<string> tags = new();
+
         private readonly HttpClient _httpClient;
         public ScrapeService(HttpClient httpClient)
         {
@@ -13,9 +18,8 @@ namespace WikiSum.Services.Scrapping
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
                    "MyScraper/1.0 (contact: jouw-email@example.com)"
             );
-            Debug.WriteLine("[ScrapService]: Constructor wordt goed aan geroepen.");
         }
-        public async Task<string?> GetRequestAsync(Uri requestUri)
+        public async Task<List<string>?> GetRequestAsync(Uri requestUri)
         {
             Debug.WriteLine($"[ScrapService]: Getting URI {requestUri}.");
 
@@ -27,29 +31,133 @@ namespace WikiSum.Services.Scrapping
                 string html = responseBody;
                 var context = BrowsingContext.New(Configuration.Default);
                 var document = await context.OpenAsync(req => req.Content(html));
-
-                // Verwijder elementen die geen nuttige tekst bevatten
-                document.QuerySelectorAll("script, style, noscript, template,iframe,svg,canvas,header,footer,nav, aside")
-                    .ToList()
-                    .ForEach(element => element.Remove());
-
-                // Haal alle tekst uit het document
-                var text = document.Body?.TextContent ?? string.Empty;
-
-                // Normaliseer witruimte
-                text = Regex.Replace(text, @"\s+", " ").Trim();
-
-                Console.WriteLine(text);
-                // Above three lines can be replaced with new helper method below
-                // string responseBody = await client.GetStringAsync(uri);
-
-                return text;
+                GetHeadings(document);
+                SetTags(document);
+                return PrepareResult();
             }
             catch (HttpRequestException e)
             {
                 Debug.WriteLine("\nException Caught!");
                 Debug.WriteLine("Message :{0} ", e.Message);
                 return null;
+            }
+
+
+        }
+        private List<string> PrepareResult()
+        {
+            var parser = new HtmlParser();
+            List<string> result = new();
+            foreach (var tag in tags)
+            {
+                IDocument tagDocument = parser.ParseDocument(tag);
+                result.Add(ExtractUselessTags(tagDocument));
+            }
+            return result;
+        }
+        private void SetTags(IDocument document)
+        {
+            string? startId = GetId();
+            while (startId != null)
+            {
+                string? endId = GetId();
+                Debug.WriteLine($"StartId: {startId} & EndId: {endId}");
+                if (endId == null)
+                {
+                    break;
+                }
+                string content = GetContentBetweenHeadings(document, startId, endId);
+                if (startId != "start")
+                {
+                    tags.Add(content);
+                }
+
+                startId = endId;
+            }
+        }
+
+        private string? GetId()
+        {
+            if (headings.Count == 0) return null;
+            string? href = headings.Dequeue().GetAttribute("href");
+
+            if (string.IsNullOrEmpty(href)) return null;
+
+            int hashIndex = href.IndexOf('#');
+            if (hashIndex < 0) return href;
+
+            // Pak alles na de '#'
+            string id = href.Substring(hashIndex + 1);
+
+            // Als de href alleen '#' is, is de id leeg. We geven dan een specifieke aanduiding terug.
+            return string.IsNullOrEmpty(id) ? "start" : id;
+
+        }
+        private string GetContentBetweenHeadings(IDocument document, string startId, string endId)
+        {
+            var startElement = document.GetElementById(startId);
+
+            if (startId == "start")
+            {
+                startElement = document.QuerySelector("[data-mw-section-id='0']");
+                tags.Add(startElement.OuterHtml);
+
+            }
+            var endElement = document.GetElementById(endId);
+
+            if (startElement == null) return string.Empty;
+
+            List<string> content = new();
+
+            // Pak het omringende element van de kop (vaak de <div class="mw-heading"> op Wikipedia)
+            // Zo niet, dan vallen we terug op het startElement zelf.
+            var current = startElement.ParentElement?.ClassName?.Contains("mw-heading") == true
+                          ? startElement.ParentElement.NextElementSibling
+                          : startElement.NextElementSibling;
+
+            // Bepaal ook het eindpunt (als er een endId is)
+            var endTarget = endElement?.ParentElement?.ClassName?.Contains("mw-heading") == true
+                                           ? endElement.ParentElement
+                                           : endElement;
+
+            while (current != null && current != endTarget)
+            {
+                content.Add(current.OuterHtml);
+                current = current.NextElementSibling;
+            }
+
+            return string.Join(" ", content);
+        }
+
+        private string ExtractUselessTags(IDocument document)
+        {
+            // Verwijder elementen die geen nuttige tekst bevatten
+            document.QuerySelectorAll("script, style, noscript, template,iframe,svg,canvas,header,footer,nav, aside")
+                .ToList()
+                .ForEach(element => element.Remove());
+
+            // Haal alle tekst uit het document
+            var text = document.Body?.TextContent ?? string.Empty;
+
+            text = Regex.Replace(text, @"\s+", " ").Trim();
+
+            Debug.WriteLine($"[ScrapeService]: Cleaned tekst: {text}");
+            return text;
+        }
+
+        private void GetHeadings(IDocument document)
+        {
+            var links = document.QuerySelectorAll("nav[aria-label='Contents'] a");
+            foreach (var link in links)
+            {
+                string content = link.TextContent.Trim();
+                if (content.Split("\t")[0].Contains("."))
+                {
+                    continue;
+                }
+                string? url = link.GetAttribute("href");
+                Debug.WriteLine($"Tekst: {content} | URL: {url}");
+                headings.Enqueue(link);
             }
         }
     }
