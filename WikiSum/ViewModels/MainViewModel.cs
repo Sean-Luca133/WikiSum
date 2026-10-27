@@ -59,7 +59,7 @@ namespace WikiSum.ViewModels
             return await _translationService.TranslateText(text, start, to);
         }
 
-        private async Task<ExtractiveSummarizeOperation> Summarizetext(List<string> document)
+        private async Task<AbstractiveSummarizeOperation> Summarizetext(List<string> document)
         {
             return await _summarizationService.SummarizeText(document);
         }
@@ -113,30 +113,31 @@ namespace WikiSum.ViewModels
                 document
             };
 
-            ExtractiveSummarizeOperation returnData = await Summarizetext(batchedDocuments);
-            foreach (ExtractiveSummarizeResultCollection documents in returnData.GetValues())
+            AbstractiveSummarizeOperation returnData = await Summarizetext(batchedDocuments);
+            foreach (AbstractiveSummarizeResultCollection documents in returnData.GetValues())
             {
-                foreach (ExtractiveSummarizeResult documentResult in documents)
+                foreach (AbstractiveSummarizeResult documentResult in documents)
                 {
                     // Error check
                     if (documentResult.HasError)
                     {
-                        Debug.WriteLine($"  Error!");
-                        Debug.WriteLine($"  Document error code: {documentResult.Error.ErrorCode}");
-                        Debug.WriteLine($"  Message: {documentResult.Error.Message}");
+                        Debug.WriteLine($"[MainViewModel]  Error!");
+                        Debug.WriteLine($"[MainViewModel]  Document error code: {documentResult.Error.ErrorCode}");
+                        Debug.WriteLine($"[MainViewModel]  Message: {documentResult.Error.Message}");
                         continue;
                     }
 
-                    Debug.WriteLine($"  Extracted {documentResult.Sentences.Count} sentence(s):");
 
-
-                    foreach (ExtractiveSummarySentence sentence in documentResult.Sentences)
+                    foreach (AbstractiveSummary summary in documentResult.Summaries)
                     {
-                        Debug.WriteLine($"  Sentence: {sentence.Text}");
-                        Debug.WriteLine($"  Rank Score: {sentence.RankScore}");
-                        Debug.WriteLine($"  Offset: {sentence.Offset}");
-                        Debug.WriteLine($"  Length: {sentence.Length}");
+                        Debug.WriteLine($"[MainViewModel]  Text: {summary.Text.Replace("\n", " ")}");
+                        Debug.WriteLine($"[MainViewModel]  Contexts:");
 
+                        foreach (AbstractiveSummaryContext context in summary.Contexts)
+                        {
+                            Debug.WriteLine($"[MainViewModel]    Offset: {context.Offset}");
+                            Debug.WriteLine($"[MainViewModel]    Length: {context.Length}");
+                        }
                     }
                 }
 ;

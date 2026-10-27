@@ -8,6 +8,6 @@ namespace WikiSum.Services.Sumerization
 {
     public interface ISummarizationService
     {
-        public Task<ExtractiveSummarizeOperation> SummarizeText(List<string> document);
+        Task<AbstractiveSummarizeOperation> SummarizeText(List<string> document);
     }
 }
