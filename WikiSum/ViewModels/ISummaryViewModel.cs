@@ -1,3 +1,4 @@
+using Azure.AI.TextAnalytics;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,9 +11,5 @@ namespace WikiSum.ViewModels
         Task<List<string>?> GetWebsite();
         ICommand SearchCommand { get; set; }
         ICommand TranslateTextCommand { get; set; }
-        ICommand TranslateTestCommand { get; set; }
-        ICommand SummarizeTestCommand { get; set; }
-        string TestText { get; set; }
-
     }
 }
