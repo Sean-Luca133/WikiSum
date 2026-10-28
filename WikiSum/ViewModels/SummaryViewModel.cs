@@ -10,6 +10,8 @@ using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.Services.Scrapping;
 using System.Text.RegularExpressions;
+using WikiSum.Models;
+using System.Collections.ObjectModel;
 
 
 namespace WikiSum.ViewModels
@@ -21,7 +23,13 @@ namespace WikiSum.ViewModels
         private ISummarizationService _summarizationService;
         public ICommand TranslateTextCommand { get; set; }
         public ICommand SearchCommand { get; set; }
+        private ObservableCollection<WebsiteParagraph> content = new ObservableCollection<WebsiteParagraph>();
 
+        public ObservableCollection<WebsiteParagraph> Content
+        {
+            get => content;
+            set => SetProperty(ref content, value);
+        }
 
         public SummaryViewModel(ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
         {
@@ -33,15 +41,20 @@ namespace WikiSum.ViewModels
         }
         public void BindCommands()
         {
-            SearchCommand = new AsyncRelayCommand(GetWebsite);
+            SearchCommand = new AsyncRelayCommand(GetSummary);
             // add translate command here
         }
 
-        public async Task<List<string>?> GetWebsite()
+        public async Task GetSummary()
         {
-            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
+           List<string> WebsiteContent =  await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
 
-
+           foreach(string summary in WebsiteContent)
+            {
+                Debug.WriteLine($"[SummaryViewModel]: {summary}");
+                // header can be added as first parameter
+                Content.Add(new("", summary));
+            }
         }
 
 

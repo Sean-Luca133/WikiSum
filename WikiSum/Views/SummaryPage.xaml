@@ -3,8 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WikiSum.Views.SummaryPage"
              xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
+             xmlns:models="clr-namespace:WikiSum.Models"
              x:DataType="viewModel:ISummaryViewModel"
              Title="SummaryPage">
+    <ScrollView Margin="20">
     <VerticalStackLayout>
         <Label 
             Text="Select your page to Summarize"
@@ -33,9 +35,23 @@
             <Button Command="{Binding SearchCommand}" Text="Search"/>
         </HorizontalStackLayout>
 
-        <Label Text="" 
-               VerticalOptions="Center" 
-               HorizontalOptions="Center"/>
 
-    </VerticalStackLayout>
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Content}" >
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:WebsiteParagraph">
+                        <Grid RowDefinitions="auto, auto, *" ColumnDefinitions="Auto, *" Margin="20,0,20,0" >
+                            <Label Grid.ColumnSpan="2" Text="{Binding Header }" FontSize="30" />
+                            <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2">
+                                <Label Text="{Binding ParagraphSummary}" 
+                                   MaximumWidthRequest="550" 
+                                   VerticalOptions="Center" 
+                                   HorizontalOptions="Center" 
+                                   Margin="0,20,0,20"/>
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
