@@ -1,20 +1,16 @@
 using Azure.AI.TextAnalytics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Windows.Input;
+using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
-using WikiSum.Services.Scrapping;
-using System.Text.RegularExpressions;
 
 
 namespace WikiSum.ViewModels
 {
-    public class MainViewModel : ObservableObject, IMainViewModel 
+    public class MainViewModel : ObservableObject, IMainViewModel
     {
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
@@ -24,15 +20,15 @@ namespace WikiSum.ViewModels
         public ICommand TranslateTestCommand { get; set; }
         public ICommand SummarizeTestCommand { get; set; }
         public ICommand SearchCommand { get; set; }
-        
 
-        public MainViewModel(ITranslationService translationService,ISummarizationService summarizationService, IScrapeService scrapeService)
+
+        public MainViewModel(ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
         {
             _translationService = translationService;
             _summarizationService = summarizationService;
             _scrapeService = scrapeService;
             BindCommands();
-            
+
         }
         public void BindCommands()
         {
@@ -41,18 +37,13 @@ namespace WikiSum.ViewModels
             SummarizeTestCommand = new AsyncRelayCommand(SummarizeTest);
         }
 
-          public async Task<string> GetWebsite()
-          {
-            string? result = await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Universally_unique_identifier"));
-            if (!String.IsNullOrEmpty(result))
-            {
-                Debug.WriteLine($"[MainViewModel]: {result}");
-                return result;
-            }
-            return string.Empty;
-              
-          }
-          
+        public async Task<List<string>?> GetWebsite()
+        {
+            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
+
+
+        }
+
 
         private async Task<string> TranslateText(string text, string start, string to)
         {
@@ -66,53 +57,39 @@ namespace WikiSum.ViewModels
 
         private async Task SummarizeTest()
         {
-            string document = await GetWebsite();
-            Debug.WriteLine($"[MainViewModel]:{document.Length}");
-
-            // Prepare the input of the text analysis operation. You can add multiple documents to this list and
-            // perform the same operation on all of them simultaneously.
-            List<string> batchedDocuments = new()
+            List<string>? documents = await GetWebsite();
+            if (documents == null)
             {
-                document
-            };
-
-            AbstractiveSummarizeOperation returnData = await Summarizetext(batchedDocuments);
-            foreach (AbstractiveSummarizeResultCollection documents in returnData.GetValues())
+                throw new ApplicationException("Wiki doesn't exist");
+            }
+            // negeer de references aka het laatste item
+            documents = documents.GetRange(0, documents.Count - 1);
+            foreach (string document in documents)
             {
-                foreach (AbstractiveSummarizeResult documentResult in documents)
+                // Prepare the input of the text analysis operation. You can add multiple documents to this list and
+                // perform the same operation on all of them simultaneously.
+                List<string> batchedDocuments = new() { document };
+
+                AbstractiveSummarizeOperation returnData = await Summarizetext(batchedDocuments);
+                var summaries = returnData.GetValues()
+                                            .SelectMany(collection => collection)
+                                            .Where(doc => !doc.HasError)
+                                            .SelectMany(doc => doc.Summaries);
+
+                foreach (var summary in summaries)
                 {
-                    // Error check
-                    if (documentResult.HasError)
-                    {
-                        Debug.WriteLine($"[MainViewModel]  Error!");
-                        Debug.WriteLine($"[MainViewModel]  Document error code: {documentResult.Error.ErrorCode}");
-                        Debug.WriteLine($"[MainViewModel]  Message: {documentResult.Error.Message}");
-                        continue;
-                    }
-
-
-                    foreach (AbstractiveSummary summary in documentResult.Summaries)
-                    {
-                        Debug.WriteLine($"[MainViewModel]  Text: {summary.Text.Replace("\n", " ")}");
-                        Debug.WriteLine($"[MainViewModel]  Contexts:");
-
-                        foreach (AbstractiveSummaryContext context in summary.Contexts)
-                        {
-                            Debug.WriteLine($"[MainViewModel]    Offset: {context.Offset}");
-                            Debug.WriteLine($"[MainViewModel]    Length: {context.Length}");
-                        }
-                    }
+                    Debug.WriteLine($"[MainViewModel]: Text: {summary.Text.Replace("\n", " ")}");
                 }
-;
-                Debug.WriteLine("Summarization Done");
 
             }
+            Debug.WriteLine("[MainViewModel]: Summarization Done");
+
         }
 
         // method for testing the translation Check debug for translation
         private async Task TranslateTest()
         {
-            TestText = await GetWebsite();
+            //TestText await GetWebsite();
             TestText = await TranslateText(TestText, "en", "nl");
             Debug.WriteLine(TestText);
         }
