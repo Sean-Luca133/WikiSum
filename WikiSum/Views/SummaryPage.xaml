@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WikiSum.Views.SummaryPage"
              xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
-             x:DataType="viewModel:IMainViewModel"
+             x:DataType="viewModel:ISummaryViewModel"
              Title="SummaryPage">
     <VerticalStackLayout>
         <Label 
