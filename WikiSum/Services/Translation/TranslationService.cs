@@ -18,12 +18,15 @@ namespace WikiSum.Services
 
     public class TranslationService : ITranslationService
     {
-        public async Task<string> TranslateText(string text, string fromLang, string toLang)
+        private HttpClient client = new();
+        public TranslationService()
         {
-            using var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", ApiTranslationKeys.TranslatorKey);
             client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Region", ApiTranslationKeys.TranslatorRegion);
+        }
 
+        public async Task<string> TranslateText(string text, string fromLang, string toLang)
+        { 
             var endpoint = $"https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from={fromLang}&to={toLang}";
 
             var body = new object[] { new { Text = text } };

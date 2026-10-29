@@ -47,7 +47,8 @@ namespace WikiSum.Services.Scrapping
 
         private void GetHeadings(IDocument document)
         {
-            var links = document.QuerySelectorAll("nav[aria-label='Contents'] a");
+            // Changed to id because aria label is language specific
+            var links = document.QuerySelectorAll("nav[id=\"mw-panel-toc\"] a");
             foreach (var link in links)
             {
                 string content = link.TextContent.Trim();
@@ -63,7 +64,13 @@ namespace WikiSum.Services.Scrapping
         private void SetTags(IDocument document)
         {
             string? startId = GetId();
-            headingsList.Add(startId);
+
+            // Null check for invalid scrapted sites
+            if(startId != null)
+            {
+                headingsList.Add(startId.Replace("_"," "));
+            }
+            
             while (startId != null)
             {
                 string? endId = GetId();
@@ -73,13 +80,13 @@ namespace WikiSum.Services.Scrapping
                     break;
                 }
                 string content = GetContentBetweenHeadings(document, startId, endId);
-                if (startId != "start")
+                if (startId != "Start")
                 {
                     tags.Add(content);
                 }
 
                 startId = endId;
-                headingsList.Add(startId);
+                headingsList.Add(startId.Replace("_", " "));
             }
         }
 
@@ -97,14 +104,14 @@ namespace WikiSum.Services.Scrapping
             string id = href.Substring(hashIndex + 1);
 
             // Als de href alleen '#' is, is de id leeg. We geven dan een specifieke aanduiding terug.
-            return string.IsNullOrEmpty(id) ? "start" : id;
+            return string.IsNullOrEmpty(id) ? "Start" : id;
 
         }
         private string GetContentBetweenHeadings(IDocument document, string startId, string endId)
         {
             var startElement = document.GetElementById(startId);
 
-            if (startId == "start")
+            if (startId == "Start")
             {
                 startElement = document.QuerySelector("[data-mw-section-id='0']");
                 tags.Add(startElement.OuterHtml);
