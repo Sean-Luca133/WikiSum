@@ -88,7 +88,7 @@ namespace WikiSum.ViewModels
 
         // method for testing the translation Check debug for translation
         private async Task TranslateTest()
-        {<
+        {
             //TestText await GetWebsite();
             TestText = await TranslateText(TestText, "en", "nl");
             Debug.WriteLine(TestText);
