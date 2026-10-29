@@ -6,7 +6,7 @@ using System.Text;
 
 namespace WikiSum.Models
 {
-    class Website: ObservableObject
+    public class Website: ObservableObject
     {
         private string url;
         private ObservableCollection<WebsiteParagraph> websiteParagraphs = new ObservableCollection<WebsiteParagraph>();
@@ -25,6 +25,12 @@ namespace WikiSum.Models
 
         public Website()
         {
+        }
+
+        public Website(string url, ObservableCollection<WebsiteParagraph> websiteParagraphs)
+        {
+            Url = url;
+            WebsiteParagraphs = websiteParagraphs;
         }
     }
 }

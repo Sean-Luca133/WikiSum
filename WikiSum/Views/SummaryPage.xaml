@@ -14,7 +14,7 @@
            FontAttributes="Bold"
            VerticalOptions="Center" 
            HorizontalOptions="Center" />
-        <HorizontalStackLayout Margin="0,20,0,20" Spacing="15">
+           <HorizontalStackLayout HorizontalOptions="Center" Margin="0,20,0,20" Spacing="15">
             <Label Text="Wiki Url" 
                    FontSize="16"
                    FontAttributes="Bold" 
@@ -24,11 +24,9 @@
                MinimumWidthRequest="250"
                Placeholder="https://"/>
 
-            <Picker Title="Language" MinimumWidthRequest="200">
-                <Picker.Items>
-                    <x:String>English</x:String>
-                    <x:String>Dutch</x:String>
-                    <x:String>French</x:String>
+                <Picker Title="Language" MinimumWidthRequest="200" ItemsSource="{Binding LanguageOptions}"  SelectedIndex="{Binding SelectedPageLanguage}">
+                <Picker.Items >
+                   
                 </Picker.Items>
             </Picker>
 
@@ -42,9 +40,10 @@
                     <DataTemplate x:DataType="models:WebsiteParagraph">
                         <VerticalStackLayout>
                             <Label HorizontalOptions="Center" Text="{Binding Header }" FontAttributes="Bold" FontSize="30" />
-                            <HorizontalStackLayout >
+                            <HorizontalStackLayout HorizontalOptions="Center">
                                 <Label Text="{Binding ParagraphSummary}" 
                                    MaximumWidthRequest="750"  
+                                   
                                    Margin="0,10,0,20"/>
                             </HorizontalStackLayout>
                         </VerticalStackLayout>

@@ -47,7 +47,8 @@ namespace WikiSum.Services.Scrapping
 
         private void GetHeadings(IDocument document)
         {
-            var links = document.QuerySelectorAll("nav[aria-label='Contents'] a");
+            // Changed to id because aria label is language specific
+            var links = document.QuerySelectorAll("nav[id=\"mw-panel-toc\"] a");
             foreach (var link in links)
             {
                 string content = link.TextContent.Trim();
