@@ -9,6 +9,7 @@ namespace WikiSum.Services.Scrapping
     public class ScrapeService : IScrapeService
     {
         private Queue<AngleSharp.Dom.IElement> headings = new();
+        private List<string> headingsList = new();
         private List<string> tags = new();
 
         private readonly HttpClient _httpClient;
@@ -19,7 +20,8 @@ namespace WikiSum.Services.Scrapping
                    "MyScraper/1.0 (contact: jouw-email@example.com)"
             );
         }
-        public async Task<List<string>?> GetRequestAsync(Uri requestUri)
+
+        public async Task<List<(string, string)>?> GetRequestAsync(Uri requestUri)
         {
             Debug.WriteLine($"[ScrapService]: Getting URI {requestUri}.");
 
@@ -61,6 +63,7 @@ namespace WikiSum.Services.Scrapping
         private void SetTags(IDocument document)
         {
             string? startId = GetId();
+            headingsList.Add(startId);
             while (startId != null)
             {
                 string? endId = GetId();
@@ -76,6 +79,7 @@ namespace WikiSum.Services.Scrapping
                 }
 
                 startId = endId;
+                headingsList.Add(startId);
             }
         }
 
@@ -132,7 +136,7 @@ namespace WikiSum.Services.Scrapping
             return string.Join(" ", content);
         }
 
-        private List<string> PrepareResult()
+        private List<(string, string)> PrepareResult()
         {
             var parser = new HtmlParser();
             List<string> result = new();
@@ -141,7 +145,7 @@ namespace WikiSum.Services.Scrapping
                 IDocument tagDocument = parser.ParseDocument(tag);
                 result.Add(ExtractUselessTags(tagDocument));
             }
-            return result;
+            return headingsList.Zip(result, (title, summary) => (title, summary)).ToList();
         }
         private string ExtractUselessTags(IDocument document)
         {
