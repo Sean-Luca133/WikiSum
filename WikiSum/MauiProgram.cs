@@ -5,6 +5,7 @@ using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
 using WikiSum.Services.Scrapping;
+using WikiSum.Views;
 
 namespace WikiSum
 {
@@ -33,6 +34,9 @@ namespace WikiSum
           
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<IMainViewModel, MainViewModel>();
+
+            builder.Services.AddTransient<SummaryPage>();
+            builder.Services.AddTransient<ISummaryViewModel, SummaryViewModel>();
 
 
             return builder.Build();

@@ -147,7 +147,6 @@ namespace WikiSum.Services.Scrapping
                 result.Add(ExtractUselessTags(tagDocument));
             }
             return headingsList.Zip(result, (title, summary) => (title, summary)).ToList();
-            //   return result;
         }
         private string ExtractUselessTags(IDocument document)
         {

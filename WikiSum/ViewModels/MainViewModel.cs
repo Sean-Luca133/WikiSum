@@ -18,7 +18,7 @@ namespace WikiSum.ViewModels
         public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
         public ICommand TranslateTestCommand { get; set; }
-        public ICommand SummarizeTestcommand { get; set; }
+        public ICommand SummarizeTestCommand { get; set; }
         public ICommand SearchCommand { get; set; }
 
 
@@ -34,7 +34,14 @@ namespace WikiSum.ViewModels
         {
             SearchCommand = new AsyncRelayCommand(GetWebsite);
             TranslateTestCommand = new AsyncRelayCommand(TranslateTest);
-            SummarizeTestcommand = new AsyncRelayCommand(SummarizeTest);
+            SummarizeTestCommand = new AsyncRelayCommand(SummarizeTest);
+        }
+
+        public async Task<List<string>?> GetWebsite()
+        {
+            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
+
+
         }
 
         public async Task<List<(string, string)>?> GetWebsite()
