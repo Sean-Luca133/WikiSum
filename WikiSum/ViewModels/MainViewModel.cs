@@ -37,7 +37,7 @@ namespace WikiSum.ViewModels
             SummarizeTestcommand = new AsyncRelayCommand(SummarizeTest);
         }
 
-        public async Task<List<string>?> GetWebsite()
+        public async Task<List<(string, string)>?> GetWebsite()
         {
             return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
 
@@ -57,18 +57,24 @@ namespace WikiSum.ViewModels
 
         private async Task SummarizeTest()
         {
-            List<string>? documents = await GetWebsite();
+            List<(string, string)>? documents = await GetWebsite();
             if (documents == null)
             {
                 throw new ApplicationException("Wiki doesn't exist");
             }
+
+            foreach (var (nummer, zin) in documents)
+            {
+                Debug.WriteLine(nummer);
+                Debug.WriteLine(zin);
+            }
             // negeer de references aka het laatste item
             documents = documents.GetRange(0, documents.Count - 1);
-            foreach (string document in documents)
+            foreach (var (title, sum) in documents)
             {
                 // Prepare the input of the text analysis operation. You can add multiple documents to this list and
                 // perform the same operation on all of them simultaneously.
-                List<string> batchedDocuments = new() { document };
+                List<string> batchedDocuments = new() { sum };
 
                 AbstractiveSummarizeOperation returnData = await Summarizetext(batchedDocuments);
                 var summaries = returnData.GetValues()
