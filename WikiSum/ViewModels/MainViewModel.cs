@@ -18,7 +18,7 @@ namespace WikiSum.ViewModels
         public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
         public ICommand TranslateTestCommand { get; set; }
-        public ICommand SummarizeTestCommand { get; set; }
+        public ICommand SummarizeTestcommand { get; set; }
         public ICommand SearchCommand { get; set; }
 
 
@@ -34,14 +34,7 @@ namespace WikiSum.ViewModels
         {
             SearchCommand = new AsyncRelayCommand(GetWebsite);
             TranslateTestCommand = new AsyncRelayCommand(TranslateTest);
-            SummarizeTestCommand = new AsyncRelayCommand(SummarizeTest);
-        }
-
-        public async Task<List<string>?> GetWebsite()
-        {
-            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
-
-
+            SummarizeTestcommand = new AsyncRelayCommand(SummarizeTest);
         }
 
         public async Task<List<(string, string)>?> GetWebsite()
@@ -69,12 +62,6 @@ namespace WikiSum.ViewModels
             {
                 throw new ApplicationException("Wiki doesn't exist");
             }
-
-            foreach (var (nummer, zin) in documents)
-            {
-                Debug.WriteLine(nummer);
-                Debug.WriteLine(zin);
-            }
             // negeer de references aka het laatste item
             documents = documents.GetRange(0, documents.Count - 1);
             foreach (var (title, sum) in documents)
@@ -101,7 +88,7 @@ namespace WikiSum.ViewModels
 
         // method for testing the translation Check debug for translation
         private async Task TranslateTest()
-        {
+        {<
             //TestText await GetWebsite();
             TestText = await TranslateText(TestText, "en", "nl");
             Debug.WriteLine(TestText);

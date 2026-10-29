@@ -80,7 +80,6 @@ namespace WikiSum.Services.Scrapping
 
                 startId = endId;
                 headingsList.Add(startId);
-
             }
         }
 
