@@ -14,5 +14,7 @@ namespace WikiSum.ViewModels
         ICommand SearchCommand { get; set; }
         ICommand TranslateTextCommand { get; set; }
         ObservableCollection<WebsiteParagraph> Content { get; set; }
+        string UrlInput { get; set; }
+        string FeedbackMessage { get; set; }
     }
 }
