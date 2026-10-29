@@ -18,7 +18,7 @@ namespace WikiSum.ViewModels
         public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
         public ICommand TranslateTestCommand { get; set; }
-        public ICommand SummarizeTestCommand { get; set; }
+        public ICommand SummarizeTestcommand { get; set; }
         public ICommand SearchCommand { get; set; }
 
 
@@ -34,10 +34,10 @@ namespace WikiSum.ViewModels
         {
             SearchCommand = new AsyncRelayCommand(GetWebsite);
             TranslateTestCommand = new AsyncRelayCommand(TranslateTest);
-            SummarizeTestCommand = new AsyncRelayCommand(SummarizeTest);
+            SummarizeTestcommand = new AsyncRelayCommand(SummarizeTest);
         }
 
-        public async Task<List<string>?> GetWebsite()
+        public async Task<List<(string, string)>?> GetWebsite()
         {
             return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
 
@@ -57,18 +57,18 @@ namespace WikiSum.ViewModels
 
         private async Task SummarizeTest()
         {
-            List<string>? documents = await GetWebsite();
+            List<(string, string)>? documents = await GetWebsite();
             if (documents == null)
             {
                 throw new ApplicationException("Wiki doesn't exist");
             }
             // negeer de references aka het laatste item
             documents = documents.GetRange(0, documents.Count - 1);
-            foreach (string document in documents)
+            foreach (var (title, sum) in documents)
             {
                 // Prepare the input of the text analysis operation. You can add multiple documents to this list and
                 // perform the same operation on all of them simultaneously.
-                List<string> batchedDocuments = new() { document };
+                List<string> batchedDocuments = new() { sum };
 
                 AbstractiveSummarizeOperation returnData = await Summarizetext(batchedDocuments);
                 var summaries = returnData.GetValues()
