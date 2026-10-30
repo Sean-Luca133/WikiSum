@@ -73,16 +73,21 @@ namespace WikiSum.ViewModels
             _translationService = translationService;
             _summarizationService = summarizationService;
             _scrapeService = scrapeService;
-            LanguageAbreviations.Add("Dutch", "nl");
-            LanguageAbreviations.Add("English", "en");
-            LanguageAbreviations.Add("French", "fr");
-            // Extra languages can be add here
-            
-           
+            LoadLanguageAbriviations();
+
             LanguageOptions = LanguageAbreviations.Keys.ToList();
             BindCommands();
 
         }
+
+        private void LoadLanguageAbriviations()
+        {
+            LanguageAbreviations.Add("Dutch", "nl");
+            LanguageAbreviations.Add("English", "en");
+            LanguageAbreviations.Add("French", "fr");
+            // Extra languages can be add here
+        }
+
         public void BindCommands()
         {
             SearchCommand = new AsyncRelayCommand(GetSummary);
@@ -94,56 +99,78 @@ namespace WikiSum.ViewModels
             // Reset propeties on new search 
             FeedbackMessage = "";
             Content = new ObservableCollection<WebsiteParagraph>();
+
             // Input checks
+
+            if (!UrlIsValid())
+            {
+                return;
+            }
+
+            
+            (bool ContentIsCorrect, List<(string, string)> websiteContent) = await GetWebsiteContent();
+            if (!ContentIsCorrect)
+            {
+                return;
+            }
+
+            await TranslateAndSummerizeResult(websiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
+
+            visitedWebsites.Add(new(UrlInput, Content));
+        }
+
+        private async Task<(bool, List<(string, string)>)> GetWebsiteContent()
+        {
+            List<(string, string)> websiteContent = await _scrapeService.GetRequestAsync(new Uri(UrlInput));
+            if (websiteContent == null)
+            {
+                FeedbackMessage = "No content found, please check if given url exists";
+                return (false, new List<(string, string)>());
+            }
+
+            if (websiteContent.Count < 1)
+            {
+                FeedbackMessage = "No headings found in article, Check if it is a wikipedia link";
+                return (false, new List<(string, string)>());
+            }
+
+            return (true,websiteContent);
+        }
+
+        private bool UrlIsValid()
+        {
             if (UrlInput == string.Empty)
             {
                 FeedbackMessage = "No url given, please specify the wiki page";
-                return;
+                return false;
             }
 
 
             if (!Uri.IsWellFormedUriString(UrlInput, UriKind.Absolute))
             {
                 FeedbackMessage = "Url is not valid, please check if given url exists";
-                return;
+                return false;
             }
 
-            List<(string, string)>? WebsiteContent = await _scrapeService.GetRequestAsync(new Uri(UrlInput));
-
-            if(WebsiteContent == null)
-            {
-                FeedbackMessage = "No content found, please check if given url exists";
-                return;
-            }
-
-            if (WebsiteContent.Count < 1)
-            {
-                FeedbackMessage = "No headings found in article, Check if it is a wikipedia link";
-                return;
-            }
-
-            await TranslateAndSummerizeResult(WebsiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
-            Debug.WriteLine($"[SummaryViewModel] content count: {Content.Count}");
-
-            visitedWebsites.Add(new(UrlInput, Content));
+            return true;
         }
 
         private async Task TranslateAndSummerizeResult(List<(string, string)> websiteContent, string inputAbbreviration)
         {
-            foreach ((string heading, string paragraph) in websiteContent.GetRange(0, 4))
+            foreach ((string heading, string paragraph) in websiteContent)
             {
 
+                Debug.WriteLine(paragraph);
                 // Translate
-                string tranParagraph = await TranslateText(paragraph, inputAbbreviration, "en");
+                string transParagraph = await TranslateText(paragraph, inputAbbreviration, "en");
 
 
 
                 // Summary
-                Debug.WriteLine($"[SummaryViewModel]: {tranParagraph}");
                 string summaryTotal = "";
 
                 // Make batch for summary
-                List<string> batchedDocuments = new() { tranParagraph };
+                List<string> batchedDocuments = new() { transParagraph };
                 AbstractiveSummarizeOperation summaryResult = await Summarizetext(batchedDocuments);
 
                 // Get summary data
