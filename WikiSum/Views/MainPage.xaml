@@ -10,6 +10,7 @@
         <ToolbarItem Text="Search" Command="{Binding SearchCommand}" />
         <ToolbarItem Text="Translate" Command="{Binding TranslateTestCommand}" />
         <ToolbarItem Text="Summerize" Command="{Binding SummarizeTestCommand}" />
+        <ToolbarItem Text="DetectLanguage" Command="{Binding LanguageDetectionServiceTestCommand}" />
     </ContentPage.ToolbarItems>
     <VerticalStackLayout>
         <Label 

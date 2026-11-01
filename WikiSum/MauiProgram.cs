@@ -6,6 +6,7 @@ using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
 using WikiSum.Services.Scrapping;
 using WikiSum.Views;
+using WikiSum.Services.LanguageDetection;
 
 namespace WikiSum
 {
@@ -28,6 +29,7 @@ namespace WikiSum
             builder.Logging.AddDebug();
 #endif
             Env.Load();
+            builder.Services.AddTransient<ILanguageDetectionService, LanguageDetectionService>();
             builder.Services.AddHttpClient<IScrapeService, ScrapeService>();
             builder.Services.AddTransient<ITranslationService, TranslationService>();
             builder.Services.AddTransient<ISummarizationService, SummarizationService>();

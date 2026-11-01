@@ -1,10 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using WikiSum.Services.Translation;
 
 namespace WikiSum.Services
@@ -29,6 +25,7 @@ namespace WikiSum.Services
         public async Task<string> TranslateText(string text, string fromLang, string toLang)
         { 
             var endpoint = $"{ApiTranslationKeys.TranslatorEndpoint}{fromLang}&to={toLang}";
+            Debug.WriteLine($"[TranslationService]: endpoint: {endpoint}");
 
             var body = new object[] { new { Text = text } };
             var content = new StringContent(System.Text.Json.JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");

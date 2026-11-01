@@ -2,14 +2,11 @@ using AngleSharp.Common;
 using Azure.AI.TextAnalytics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Input;
 using WikiSum.Models;
+using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
@@ -20,6 +17,7 @@ namespace WikiSum.ViewModels
     public class SummaryViewModel : ObservableObject, ISummaryViewModel
     {
         // Services/objects
+        private ILanguageDetectionService _languageDetectionService;
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
         private ISummarizationService _summarizationService;
@@ -30,13 +28,38 @@ namespace WikiSum.ViewModels
         public Dictionary<string, string> LanguageAbreviations { get; set; } = new Dictionary<string, string>();
         public List<string> LanguageOptions { get; set; }
         private int selectedPageLanguage;
+        private List<string> supportedLanguages = new List<string>
+{
+    "zh-hans", // Chinese (Simplified)
+    "zh-hant", // Chinese (Traditional)
+    "en",      // English
+    "fr",      // French
+    "de",      // German
+    "he",      // Hebrew
+    "it",      // Italian
+    "ja",      // Japanese
+    "ko",      // Korean
+    "pl",      // Polish
+    "pt",      // Portuguese
+    "es",      // Spanish
+    "nl",      // Dutch
+    "sv",      // Swedish
+    "da",      // Danish
+    "fi",      // Finnish
+    "ru",      // Russian
+    "no",      // Norwegian
+    "tr",      // Turkish
+    "ar",      // Arabic
+    "cs",      // Czech
+    "hu",      // Hungarian
+    "th"       // Thai
+};
 
         // Url properties
         private string urlInput = string.Empty;
         private string feedbackMessage = string.Empty;
         
         // Commands
-        public ICommand TranslateTextCommand { get; set; }
         public ICommand SearchCommand { get; set; }
 
         public ObservableCollection<WebsiteParagraph> Content
@@ -68,8 +91,9 @@ namespace WikiSum.ViewModels
         }
         
 
-        public SummaryViewModel(ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
+        public SummaryViewModel(ILanguageDetectionService languageDetectionService,ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
         {
+            _languageDetectionService = languageDetectionService;
             _translationService = translationService;
             _summarizationService = summarizationService;
             _scrapeService = scrapeService;
@@ -85,13 +109,13 @@ namespace WikiSum.ViewModels
             LanguageAbreviations.Add("Dutch", "nl");
             LanguageAbreviations.Add("English", "en");
             LanguageAbreviations.Add("French", "fr");
+            LanguageAbreviations.Add("Spanish", "es");
             // Extra languages can be add here
         }
 
         public void BindCommands()
         {
             SearchCommand = new AsyncRelayCommand(GetSummary);
-            // add translate command here
         }
 
         public async Task GetSummary()
@@ -155,22 +179,48 @@ namespace WikiSum.ViewModels
             return true;
         }
 
-        private async Task TranslateAndSummerizeResult(List<(string, string)> websiteContent, string inputAbbreviration)
+        private async Task TranslateAndSummerizeResult(List<(string, string)> websiteContent, string outputAbbreviation)
         {
             foreach ((string heading, string paragraph) in websiteContent)
             {
 
                 Debug.WriteLine(paragraph);
-                // Translate
-                string transParagraph = await TranslateText(paragraph, inputAbbreviration, "en");
 
+                string foundLanguage = "";
+                // Detect language of paragraph
+                // 5120 is the max length service allows
+                if (paragraph.Length > 5120)
+                {
+                    foundLanguage = await DetectLanguage( paragraph.Substring(0, 5119));
+                }
+                else
+                {
+                    foundLanguage = await DetectLanguage(paragraph);
+                }
+
+
+                Debug.WriteLine($"[SummaryViewModel] language: {foundLanguage}");
+                string inputAbbreviation = LanguageAbreviations[foundLanguage];
+
+                string inputParagraph = "";
+                // if not supported first translate to english
+                if (!supportedLanguages.Contains(LanguageAbreviations[foundLanguage]))
+                {
+                    // Translate to English if not supported
+                    inputParagraph = await TranslateText(paragraph, inputAbbreviation, "en");
+
+                }
+                else
+                {
+                    inputParagraph = paragraph;
+                }
 
 
                 // Summary
                 string summaryTotal = "";
 
                 // Make batch for summary
-                List<string> batchedDocuments = new() { transParagraph };
+                List<string> batchedDocuments = new() { inputParagraph };
                 AbstractiveSummarizeOperation summaryResult = await Summarizetext(batchedDocuments);
 
                 // Get summary data
@@ -188,12 +238,16 @@ namespace WikiSum.ViewModels
 
 
                 Debug.WriteLine($"[SummaryViewModel] Summary: {summaryTotal}");
+  
+                // Translate
+                string transSummary = await TranslateText(summaryTotal,"en", outputAbbreviation);
+                string transHeading = await TranslateText(heading, inputAbbreviation, outputAbbreviation);
 
 
                 // Add directly to main thread to have a live update
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    Content.Add(new WebsiteParagraph(heading, summaryTotal));
+                    Content.Add(new WebsiteParagraph(transHeading, transSummary));
             });
 
                 Debug.WriteLine("Search is done");
@@ -203,6 +257,11 @@ namespace WikiSum.ViewModels
         private async Task<string> TranslateText(string text, string start, string to)
         {
             return await _translationService.TranslateText(text, start, to);
+        }
+        private async Task<string?> DetectLanguage(string paragraph)
+        {
+            DetectedLanguage? language = await _languageDetectionService.DetectLanguageInput(paragraph);
+            return language?.Name;
         }
 
         private async Task<AbstractiveSummarizeOperation> Summarizetext(List<string> document)
