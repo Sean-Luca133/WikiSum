@@ -24,7 +24,8 @@ namespace WikiSum.Services.Scrapping
         public async Task<List<(string, string)>?> GetRequestAsync(Uri requestUri)
         {
             Debug.WriteLine($"[ScrapService]: Getting URI {requestUri}.");
-
+            tags.Clear();
+            headingsList.Clear();
             try
             {
                 using HttpResponseMessage response = await _httpClient.GetAsync(requestUri);
@@ -74,6 +75,7 @@ namespace WikiSum.Services.Scrapping
             
             while (startId != null)
             {
+                
                 string? endId = GetId();
                 Debug.WriteLine($"StartId: {startId} & EndId: {endId}");
                 if (endId == null)
