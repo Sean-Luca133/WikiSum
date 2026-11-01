@@ -181,77 +181,155 @@ namespace WikiSum.ViewModels
 
         private async Task TranslateAndSummerizeResult(List<(string, string)> websiteContent, string outputAbbreviation)
         {
-            foreach ((string heading, string paragraph) in websiteContent)
+
+            // detect language based on first paragraph
+            string foundLanguage = "";
+            string firstParagraph = websiteContent.Select(w => w.Item2).FirstOrDefault();
+    
+            // 5120 is the max length service allows
+            if (firstParagraph.Length > 5120)
             {
+                foundLanguage = await DetectLanguage(firstParagraph.Substring(0, 5119));
+            }
+            else
+            {
+                foundLanguage = await DetectLanguage(firstParagraph);
+            }
 
-                Debug.WriteLine(paragraph);
-
-                string foundLanguage = "";
-                // Detect language of paragraph
-                // 5120 is the max length service allows
-                if (paragraph.Length > 5120)
-                {
-                    foundLanguage = await DetectLanguage( paragraph.Substring(0, 5119));
-                }
-                else
-                {
-                    foundLanguage = await DetectLanguage(paragraph);
-                }
+            Debug.WriteLine($"[SummaryViewModel] language: {foundLanguage}");
+            string inputAbbreviation = LanguageAbreviations[foundLanguage];
 
 
-                Debug.WriteLine($"[SummaryViewModel] language: {foundLanguage}");
-                string inputAbbreviation = LanguageAbreviations[foundLanguage];
-
-                string inputParagraph = "";
-                // if not supported first translate to english
-                if (!supportedLanguages.Contains(LanguageAbreviations[foundLanguage]))
-                {
-                    // Translate to English if not supported
-                    inputParagraph = await TranslateText(paragraph, inputAbbreviation, "en");
-
-                }
-                else
-                {
-                    inputParagraph = paragraph;
-                }
 
 
-                // Summary
-                string summaryTotal = "";
-
-                // Make batch for summary
-                List<string> batchedDocuments = new() { inputParagraph };
-                AbstractiveSummarizeOperation summaryResult = await Summarizetext(batchedDocuments);
-
-                // Get summary data
-                var summaries = summaryResult.GetValues()
-                                           .SelectMany(collection => collection)
-                                           .Where(doc => !doc.HasError)
-                                           .SelectMany(doc => doc.Summaries);
 
 
-                // Put everything together
-                foreach (var summary in summaries)
-                {
-                    summaryTotal += $"{summary.Text.Replace("\n", " ")} ";
-                }
+
+            List<string> currentParagraphs = websiteContent.Select(t => t.Item2).ToList();
+
+            // 1. Translate all paragraphs concurrently if not supported by summary service
+            var preTranslationTasks = currentParagraphs.Select(async item =>
+            {
+                string translated = await TranslateText(item, inputAbbreviation, "en");
+                return (translated);
+            });
 
 
-                Debug.WriteLine($"[SummaryViewModel] Summary: {summaryTotal}");
-  
+            List<string> paragraphResults;
+            // if not supported first translate to english
+            if (!supportedLanguages.Contains(LanguageAbreviations[foundLanguage]))
+            {
+                string[] translatedParagraphs = await Task.WhenAll(preTranslationTasks);
+                paragraphResults = translatedParagraphs.ToList();
+            }
+            else
+            {
+                paragraphResults = currentParagraphs;
+            }
+
+
+            // Make batch for summary
+            AbstractiveSummarizeOperation summaryResult = await Summarizetext(paragraphResults);
+
+
+            IEnumerable<AbstractiveSummary> summaries = summaryResult.GetValues()
+                                          .SelectMany(collection => collection)
+                                          .Where(doc => !doc.HasError)
+                                          .SelectMany(doc => doc.Summaries);
+
+
+
+            Debug.WriteLine($"[SummaryViewModel]: {summaries.Count()}");
+            Debug.WriteLine($"[SummaryViewModel]: {summaries.Distinct()}");
+
+
+            List<string> totalSummariesList = new List<string>();
+            List<string> headingList = websiteContent.Select(w => w.Item1).ToList();
+
+            var afterTranslationTasksPar = totalSummariesList.Select(async item =>
+            {
+                string translated = await TranslateText(item, "en", outputAbbreviation);
+                return (translated);
+            });
+
+
+            var afterTranslationTasksHead = headingList.Select(async item =>
+            {
+                string translated = await TranslateText(item, inputAbbreviation, outputAbbreviation);
+                return (translated);
+            });
+
+
+
+
+            foreach (AbstractiveSummary summary in summaries)
+            {
+                string summaryTotal = $"{summary.Text.Replace("\n", " ")} ";
+                
+                Debug.WriteLine($"[SummaryViewModel]: {summaryTotal}");
+                totalSummariesList.Add(summaryTotal);
+
+            }
                 // Translate
-                string transSummary = await TranslateText(summaryTotal,"en", outputAbbreviation);
-                string transHeading = await TranslateText(heading, inputAbbreviation, outputAbbreviation);
-
-
+                string[] transSummaries = await Task.WhenAll(afterTranslationTasksPar);
+                string[] transHeadingings = await Task.WhenAll(afterTranslationTasksHead);
+                
+                for(int i=0; i< transSummaries.Length;i++)
+            {
                 // Add directly to main thread to have a live update
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    Content.Add(new WebsiteParagraph(transHeading, transSummary));
-            });
-
-                Debug.WriteLine("Search is done");
+                    Content.Add(new WebsiteParagraph(transHeadingings.ElementAt(i), transSummaries.ElementAt(i)));
+                });
             }
+                
+
+            Debug.WriteLine("[SummaryViewModel]: Search is done");
+
+
+
+
+
+            //foreach ((string heading, string paragraph) in websiteContent)
+            //{
+
+            //    Debug.WriteLine(paragraph);
+
+
+            //    // Summary
+            //    string summaryTotal = "";
+
+                
+
+            //    // Get summary data
+            //    var summaries = summaryResult.GetValues()
+            //                               .SelectMany(collection => collection)
+            //                               .Where(doc => !doc.HasError)
+            //                               .SelectMany(doc => doc.Summaries);
+
+
+            //    // Put everything together
+            //    foreach (var summary in summaries)
+            //    {
+            //        summaryTotal += $"{summary.Text.Replace("\n", " ")} ";
+            //    }
+
+
+            //    Debug.WriteLine($"[SummaryViewModel] Summary: {summaryTotal}");
+  
+            //    // Translate
+            //    string transSummary = await TranslateText(summaryTotal,"en", outputAbbreviation);
+            //    string transHeading = await TranslateText(heading, inputAbbreviation, outputAbbreviation);
+
+
+            //    // Add directly to main thread to have a live update
+            //    MainThread.BeginInvokeOnMainThread(() =>
+            //    {
+            //        Content.Add(new WebsiteParagraph(transHeading, transSummary));
+            //});
+
+                
+            //}
         }
 
         private async Task<string> TranslateText(string text, string start, string to)
