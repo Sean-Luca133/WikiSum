@@ -25,6 +25,7 @@ namespace WikiSum.ViewModels
         private ISummarizationService _summarizationService;
         private ObservableCollection<WebsiteParagraph> content = new ObservableCollection<WebsiteParagraph>();
         private ObservableCollection<Website> visitedWebsites = new ObservableCollection<Website>();
+        private SemaphoreSlim translationSemaphore = new SemaphoreSlim(5);
 
         // Language properties 
         public Dictionary<string, string> LanguageAbreviations { get; set; } = new Dictionary<string, string>();
@@ -265,8 +266,16 @@ namespace WikiSum.ViewModels
             // 1. Translate all paragraphs concurrently if not supported by summary service
             var preTranslationTasks = currentParagraphs.Select(async item =>
             {
-                string translated = await TranslateText(item, inputAbbreviation, "en");
-                return (translated);
+                await translationSemaphore.WaitAsync();
+                try
+                {
+                    string translated = await TranslateText(item, inputAbbreviation, "en");
+                    return (translated);
+                }
+                finally
+                {
+                    translationSemaphore.Release();
+                }
             });
 
 
@@ -314,19 +323,38 @@ namespace WikiSum.ViewModels
             ActionMessage = "Translating results...";
             var afterTranslationTasksPar = totalSummariesList.Select(async item =>
             {
-                string translated = await TranslateText(item, "en", outputAbbreviation);
-                return (translated);
+                await translationSemaphore.WaitAsync();
+                try
+                {
+                    string translated = await TranslateText(item, "en", outputAbbreviation);
+                    return (translated);
+                }
+
+                finally
+                {
+                    translationSemaphore.Release();
+                }
             });
 
 
             var afterTranslationTasksHead = headingList.Select(async item =>
             {
-                string translated = await TranslateText(item, inputAbbreviation, outputAbbreviation);
-                return (translated);
+                await translationSemaphore.WaitAsync();
+                try
+                {
+                    return await TranslateText(item, inputAbbreviation, outputAbbreviation);
+                }
+
+                finally
+                {
+                    translationSemaphore.Release();
+                }
+                
             });
 
             foreach (AbstractiveSummary summary in summaries)
             {
+                
                 string summaryTotal = $"{summary.Text.Replace("\n", " ")} ";
                 
                 Debug.WriteLine($"[SummaryViewModel]: {summaryTotal}");
