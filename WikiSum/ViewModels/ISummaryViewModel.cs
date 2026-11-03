@@ -14,5 +14,8 @@ namespace WikiSum.ViewModels
         int SelectedPageLanguage { get; set; }
         string UrlInput { get; set; }
         string FeedbackMessage { get; set; }
+        bool IsError { get; set; }
+        string ActionMessage { get; set; }
+        bool IsProcessing { get; set; }
     }
 }

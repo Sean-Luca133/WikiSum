@@ -31,21 +31,23 @@
             </Picker>
 
             <Button Command="{Binding SearchCommand}" Text="Search"/>
-        </HorizontalStackLayout>
-            <Label Text="{Binding FeedbackMessage}" TextColor="Red" FontSize="12"/>
-
+            </HorizontalStackLayout>
+            <Border MaximumWidthRequest="500" Stroke="Red" StrokeThickness="3" StrokeShape="RoundRectangle 10" IsVisible="{Binding IsError}">
+                <Label Text="{Binding FeedbackMessage}" TextColor="Red" Background="LightPink" Padding="20" FontSize="16" />
+            </Border>
+            <Border MaximumWidthRequest="500"  Stroke="Orange" StrokeThickness="3" StrokeShape="RoundRectangle 10" IsVisible="{Binding IsProcessing}">
+                <Label Text="{Binding ActionMessage}" TextColor="Orange" BackgroundColor="LightYellow" Padding="20" FontSize="16"/>
+            </Border>
 
             <CollectionView ItemsSource="{Binding Content}" >
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:WebsiteParagraph">
                         <VerticalStackLayout>
                             <Label HorizontalOptions="Center" Text="{Binding Header }" FontAttributes="Bold" FontSize="30" />
-                            <HorizontalStackLayout HorizontalOptions="Center">
-                                <Label Text="{Binding ParagraphSummary}" 
-                                   MaximumWidthRequest="750"  
-                                   
+                            <Label Text="{Binding ParagraphSummary}" 
+                                   MaximumWidthRequest="750"
                                    Margin="0,10,0,20"/>
-                            </HorizontalStackLayout>
+
                         </VerticalStackLayout>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
