@@ -371,52 +371,8 @@ namespace WikiSum.ViewModels
             // Timer
             timer.Start();
             Debug.WriteLine("[SummaryViewModel]: Search is done");
-
-
-
-
-
-            //foreach ((string heading, string paragraph) in websiteContent)
-            //{
-
-            //    Debug.WriteLine(paragraph);
-
-
-            //    // Summary
-            //    string summaryTotal = "";
-
-                
-
-            //    // Get summary data
-            //    var summaries = summaryResult.GetValues()
-            //                               .SelectMany(collection => collection)
-            //                               .Where(doc => !doc.HasError)
-            //                               .SelectMany(doc => doc.Summaries);
-
-
-            //    // Put everything together
-            //    foreach (var summary in summaries)
-            //    {
-            //        summaryTotal += $"{summary.Text.Replace("\n", " ")} ";
-            //    }
-
-
-            //    Debug.WriteLine($"[SummaryViewModel] Summary: {summaryTotal}");
-  
-            //    // Translate
-            //    string transSummary = await TranslateText(summaryTotal,"en", outputAbbreviation);
-            //    string transHeading = await TranslateText(heading, inputAbbreviation, outputAbbreviation);
-
-
-            //    // Add directly to main thread to have a live update
-            //    MainThread.BeginInvokeOnMainThread(() =>
-            //    {
-            //        Content.Add(new WebsiteParagraph(transHeading, transSummary));
-            //});
-
-                
-            //}
         }
+
         private void SummeryPerInterval(object sender, ElapsedEventArgs e)
         {
 
