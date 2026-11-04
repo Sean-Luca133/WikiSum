@@ -16,9 +16,6 @@ namespace WikiSum.Services.Sumerization
     {
         private TextAnalyticsClient client = new(new Uri(ApiLanguagenKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguagenKeys.LanguagerKey));
 
-
-
-
         // Perform the text analysis operation.
         public async Task<AbstractiveSummarizeOperation> SummarizeText(List<string> document)
         {
