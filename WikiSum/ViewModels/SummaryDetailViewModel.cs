@@ -73,11 +73,15 @@ namespace WikiSum.ViewModels
             CategorizedEntityCollection entities = _entityRecognitionService.GetNamedEntities(paragraph);
 
             Debug.WriteLine($"[SummaryDetailViewModel]: Received entities: {entities.Count}");
+            FormattedString formattedString = SetEntityMarks(paragraph, entities);
+            AnalyzedParagraph = formattedString;
+        }
 
-
+        private FormattedString SetEntityMarks(string paragraph, CategorizedEntityCollection entities)
+        {
             FormattedString formattedString = new FormattedString();
             int currentIndex = 0;
-            foreach(CategorizedEntity entity in entities.OrderBy(e => e.Offset))
+            foreach (CategorizedEntity entity in entities.OrderBy(e => e.Offset))
             {
                 Debug.WriteLine($"[SummaryDetailViewModel]: entity offset: {entity.Offset}");
                 Debug.WriteLine($"[SummaryDetailViewModel]: entity length: {entity.Length}");
@@ -97,12 +101,12 @@ namespace WikiSum.ViewModels
 
                 recognizer.Tapped += async (_, _) =>
                 {
-                    await DisplayPopup(entity.Text, ((string)entity.Category));
+                    await DisplayPopup(entity.Text, (string)entity.Category);
                 };
                 var entitySpan = new Span
                 {
                     Text = entity.Text,
-                    TextColor = Colors.Gold,
+                    TextColor = GetColor((string)entity.Category),
 
                 };
 
@@ -110,21 +114,50 @@ namespace WikiSum.ViewModels
 
                 formattedString.Spans.Add(entitySpan);
 
-                
+
                 currentIndex = entity.Offset + entity.Length;
             }
-            
+
             // remaining text
-                if (currentIndex < paragraph.Length)
+            if (currentIndex < paragraph.Length)
+            {
+                formattedString.Spans.Add(new Span
                 {
-                    formattedString.Spans.Add(new Span
-                    {
-                        Text = paragraph.Substring(currentIndex)
-                    });
-                }
+                    Text = paragraph.Substring(currentIndex)
+                });
+            }
 
             Debug.WriteLine($"[SummaryDetailViewModel]: EndString: {formattedString.GetValue}");
-            AnalyzedParagraph = formattedString;
+            return formattedString;
+        }
+
+        // Assign different colors to different entity group types
+        private Color GetColor(string category)
+        {
+            return category switch
+            {
+                // People
+                "PersonType" or "Person" => Colors.Green,
+
+                // Concepts or things
+                "Skill" or "Product" => Colors.Gold,
+
+                // Locations
+                "Addres" or "Location" or "AirPort" or "Area" or "City" or "Continent" or "CountryRegion" or "Geological" or "GPE" or "IpAddress" or "Location" => Colors.Blue,
+
+                // Organizations
+                "Organization" or "OrganizationMedical" or "OrganizationSports" or "OrganizationStockExchange" => Colors.Purple,
+
+                // Events
+                "CulturalEvent" or "NaturalEvent" or "SportsEvent" => Colors.Pink,
+
+                // Numbers (except time)
+                "Age" or "Currency" or "Quantity" or "Dimension" or "Height" or "Length" or "Number" or "NumberRange" or "Ordinal" or "Percentage" or "Speed" or "Temperature" or "Volume" or "Weight" => Colors.Red,
+
+                // Time
+                "Date" or "DateRange" or "DateTime" or "DateTimeRange" or "Duration" or "SetTemporal" or "Temporal" or "Time" or "TimeRange" => Colors.Orange,
+                _ => Colors.DarkGray
+            };
         }
     }
 }
