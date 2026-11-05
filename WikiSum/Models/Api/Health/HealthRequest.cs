@@ -1,4 +1,4 @@
-﻿namespace WikiSum.Services.API.Health
+﻿namespace WikiSum.Models.Api.Health
 {
     public class HealthRequest
     {

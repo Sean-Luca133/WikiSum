@@ -1,10 +1,12 @@
 using Azure.AI.TextAnalytics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
+using WikiSum.Models.Api.Health;
+using WikiSum.Models.Api.Website;
 using WikiSum.Services.API;
-using WikiSum.Services.API.Health;
 using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
@@ -23,10 +25,12 @@ namespace WikiSum.ViewModels
         public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
         private string _status = "Fetching api status ...";
+        private ObservableCollection<WebsiteRequest> _websites;
         public ICommand TranslateTestCommand { get; set; }
         public ICommand SummarizeServiceTestCommand { get; set; }
         public ICommand SearchCommand { get; set; }
         public ICommand LanguageDetectionServiceTestCommand { get; set; }
+        public ICommand DeleteWebsiteCommand { get; set; }
 
         public ICommand CheckStatusCommand { get; set; }
 
@@ -40,6 +44,12 @@ namespace WikiSum.ViewModels
             }
         }
 
+        public ObservableCollection<WebsiteRequest> Websites
+        {
+            get => _websites;
+            set => SetProperty(ref _websites, value);
+        }
+
         public MainViewModel(ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService, IAPIService apiService)
         {
             _languageDetectionService = languageDetectionService;
@@ -47,7 +57,10 @@ namespace WikiSum.ViewModels
             _summarizationService = summarizationService;
             _scrapeService = scrapeService;
             _apiService = apiService;
+            Websites = new();
             BindCommands();
+            // is het zelfde als await maar await mag je niet direct in constructor gebruiken :)
+            _ = InitializeAsync();
 
         }
         public void BindCommands()
@@ -56,6 +69,29 @@ namespace WikiSum.ViewModels
             SearchCommand = new AsyncRelayCommand(GetWebsite);
             TranslateTestCommand = new AsyncRelayCommand(TranslateTest);
             SummarizeServiceTestCommand = new AsyncRelayCommand(SummarizeTest);
+            DeleteWebsiteCommand = new AsyncRelayCommand<WebsiteRequest>(DeleteWebsite);
+        }
+
+        private async Task InitializeAsync()
+        {
+            try
+            {
+                Debug.WriteLine($"[MainViewModel] Fetching websites...");
+
+                await GetAllPreviousWebsites();
+
+                Debug.WriteLine($"[MainViewModel] Loaded {Websites.Count} websites");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MainViewModel] Error: {ex.Message}");
+            }
+        }
+        public async Task GetAllPreviousWebsites()
+        {
+            List<WebsiteRequest> websites = await _apiService.GetAllWebsitesAsyc();
+
+            Websites = new ObservableCollection<WebsiteRequest>(websites);
         }
 
         public async Task CheckStatus()
@@ -64,15 +100,22 @@ namespace WikiSum.ViewModels
             Status = "Api status: " + status.Status;
         }
 
-
         public async Task<List<(string, string)>?> GetWebsite()
         {
             return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
-
-
         }
 
+        private async Task DeleteWebsite(WebsiteRequest website)
+        {
+            if (website == null)
+                return;
 
+            // Verwijder uit de API/database
+            await _apiService.DelteWebsiteByUrlAsync(website.Url);
+
+            // Verwijder uit de UI
+            Websites.Remove(website);
+        }
         private async Task<string> TranslateText(string text, string start, string to)
         {
             return await _translationService.TranslateText(text, start, to);
