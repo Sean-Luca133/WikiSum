@@ -12,19 +12,33 @@
         <ToolbarItem Text="Summerize" Command="{Binding SummarizeTestCommand}" />
         <ToolbarItem Text="DetectLanguage" Command="{Binding LanguageDetectionServiceTestCommand}" />
     </ContentPage.ToolbarItems>
+    
     <VerticalStackLayout>
         <Label 
-            Text="Welcome to WikiSum"
-            FontSize="24"
-            FontAttributes="Bold"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+        Text="Welcome to WikiSum"
+        FontSize="24"
+        FontAttributes="Bold"
+        VerticalOptions="Center" 
+        HorizontalOptions="Center" />
 
         <Image Source="wikisum_logo.png" 
-               SemanticProperties.Description="WikiSum logo"
-               Aspect="AspectFit" 
-               HeightRequest="250"/>
-        <Label FontSize="16" Margin="0,20,0,0" MaximumWidthRequest="650" HorizontalTextAlignment="Center"  Text="This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description." VerticalOptions="End" />
+           SemanticProperties.Description="WikiSum logo"
+           Aspect="AspectFit" 
+           HeightRequest="250"/>
 
+        <Label
+        FontSize="16"
+        Margin="0,20,0,0"
+        MaximumWidthRequest="650"
+        HorizontalTextAlignment="Center"
+        Text="This will be the description."
+        VerticalOptions="End" />
+
+        <Label
+        FontSize="16"
+        Margin="0,20,0,0"
+        MaximumWidthRequest="650"
+        HorizontalTextAlignment="Center"
+        Text="{Binding Status}" />
     </VerticalStackLayout>
 </ContentPage>

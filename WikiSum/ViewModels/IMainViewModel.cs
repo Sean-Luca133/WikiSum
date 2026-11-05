@@ -11,6 +11,7 @@ namespace WikiSum.ViewModels
         ICommand TranslateTestCommand { get; set; }
         ICommand SummarizeServiceTestCommand { get; set; }
         string TestText { get; set; }
-
+        string Status { get; set; }
+        Task CheckStatus();
     }
 }

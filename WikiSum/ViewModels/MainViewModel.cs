@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Diagnostics;
 using System.Windows.Input;
+using WikiSum.Services.API;
+using WikiSum.Services.API.Health;
 using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
@@ -17,19 +19,34 @@ namespace WikiSum.ViewModels
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
         private ISummarizationService _summarizationService;
+        private IAPIService _apiService;
         public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
+        private string _status = "Fetching api status ...";
         public ICommand TranslateTestCommand { get; set; }
         public ICommand SummarizeServiceTestCommand { get; set; }
         public ICommand SearchCommand { get; set; }
         public ICommand LanguageDetectionServiceTestCommand { get; set; }
 
-        public MainViewModel(ILanguageDetectionService languageDetectionService,ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
+        public ICommand CheckStatusCommand { get; set; }
+
+        public string Status
+        {
+            get => _status;
+            set
+            {
+                _status = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public MainViewModel(ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService, IAPIService apiService)
         {
             _languageDetectionService = languageDetectionService;
             _translationService = translationService;
             _summarizationService = summarizationService;
             _scrapeService = scrapeService;
+            _apiService = apiService;
             BindCommands();
 
         }
@@ -40,6 +57,13 @@ namespace WikiSum.ViewModels
             TranslateTestCommand = new AsyncRelayCommand(TranslateTest);
             SummarizeServiceTestCommand = new AsyncRelayCommand(SummarizeTest);
         }
+
+        public async Task CheckStatus()
+        {
+            HealthRequest status = await _apiService.GetApiStatus();
+            Status = "Api status: " + status.Status;
+        }
+
 
         public async Task<List<(string, string)>?> GetWebsite()
         {
@@ -67,15 +91,15 @@ namespace WikiSum.ViewModels
         private async Task DetectLanguageTest()
         {
             DetectedLanguage? language = await DetectLanguage(TestText);
-            if(language != null)
+            if (language != null)
             {
-                Debug.WriteLine($"[MainViewModel]: {language?.Name}"); 
+                Debug.WriteLine($"[MainViewModel]: {language?.Name}");
             }
             else
             {
                 Debug.WriteLine($"[MainViewModel]: No language found");
             }
-                
+
         }
 
         private async Task SummarizeTest()
