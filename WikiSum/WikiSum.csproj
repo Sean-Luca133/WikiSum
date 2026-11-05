@@ -77,6 +77,7 @@
 	<ItemGroup>
 		<PackageReference Include="AngleSharp" Version="1.8.6" />
 		<PackageReference Include="Azure.AI.TextAnalytics" Version="5.3.0" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 		<PackageReference Include="DotNetEnv" Version="3.2.0" />
 		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.13" />
@@ -86,13 +87,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update=".env">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+	  <MauiXaml Update="Views\EntityPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\SummaryDetailPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Views\" />
+	  <None Update=".env">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

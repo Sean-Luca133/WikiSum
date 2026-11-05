@@ -1,0 +1,19 @@
+<ContentView
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:WikiSum.ViewModels"
+    x:Class="WikiSum.Views.EntityPopup"
+    HorizontalOptions="Center"
+    VerticalOptions="Center"
+    Padding="5"
+    x:DataType="viewModels:EntityPopupViewModel">
+
+    <VerticalStackLayout WidthRequest="200" HeightRequest="100">
+
+        <Label Margin="5" FormattedText="{Binding TextValue}" />
+        <Label Margin="5" FormattedText="{Binding Category}" />
+
+        <Button Margin="5"  Text="Cancel" Command="{Binding CancelCommand}" />
+    </VerticalStackLayout>
+
+</ContentView>

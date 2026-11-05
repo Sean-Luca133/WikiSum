@@ -5,10 +5,12 @@ namespace WikiSum.ViewModels
     public interface IMainViewModel
     {
         Task<List<(string, string)>?> GetWebsite();
+        ICommand LanguageDetectionServiceTestCommand { get; set; }
         ICommand SearchCommand { get; set; }
         ICommand TranslateTextCommand { get; set; }
         ICommand TranslateTestCommand { get; set; }
-        ICommand SummarizeTestCommand { get; set; }
+        ICommand SummarizeServiceTestCommand { get; set; }
+        ICommand GetEntitiesCommand { get; set; }
         string TestText { get; set; }
 
     }

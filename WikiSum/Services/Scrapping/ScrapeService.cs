@@ -24,7 +24,8 @@ namespace WikiSum.Services.Scrapping
         public async Task<List<(string, string)>?> GetRequestAsync(Uri requestUri)
         {
             Debug.WriteLine($"[ScrapService]: Getting URI {requestUri}.");
-
+            tags.Clear();
+            headingsList.Clear();
             try
             {
                 using HttpResponseMessage response = await _httpClient.GetAsync(requestUri);
@@ -47,8 +48,8 @@ namespace WikiSum.Services.Scrapping
 
         private void GetHeadings(IDocument document)
         {
-            // Changed to id because aria label is language specific
-            var links = document.QuerySelectorAll("nav[id=\"mw-panel-toc\"] a");
+            var links = document.QuerySelectorAll("nav[id='mw-panel-toc'] a");
+
             foreach (var link in links)
             {
                 string content = link.TextContent.Trim();
@@ -63,6 +64,7 @@ namespace WikiSum.Services.Scrapping
         }
         private void SetTags(IDocument document)
         {
+             
             string? startId = GetId();
 
             // Null check for invalid scrapted sites
@@ -73,6 +75,7 @@ namespace WikiSum.Services.Scrapping
             
             while (startId != null)
             {
+                
                 string? endId = GetId();
                 Debug.WriteLine($"StartId: {startId} & EndId: {endId}");
                 if (endId == null)

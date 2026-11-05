@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WikiSum.Views.SummaryDetailPage"
+             xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
+             xmlns:models="clr-namespace:WikiSum.Models"
+             x:DataType="viewModel:ISummaryDetailViewModel"
+             Title="SummaryDetailPage">
+    <VerticalStackLayout>
+        <Label 
+            Text="See Here important elements"
+            FontSize="24"
+            FontAttributes="Bold"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center"  />
+        <HorizontalStackLayout 
+            VerticalOptions="Center" 
+            HorizontalOptions="Center">
+            <Button ImageSource="return.png" HorizontalOptions="Center" MaximumWidthRequest="30" Command="{Binding NavigateBackCommand}">
+            
+            </Button>
+            <Label FormattedText="{Binding AnalyzedParagraph}" MaximumWidthRequest="750"
+                   Margin="5,10,0,20"/>
+        </HorizontalStackLayout>
+    </VerticalStackLayout>
+</ContentPage>

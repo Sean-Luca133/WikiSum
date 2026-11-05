@@ -15,7 +15,7 @@
         Title="Summerize"
         Icon="writing.png"
         ContentTemplate="{DataTemplate views:SummaryPage}"
-        Route="MainPage" />
+        Route="Summary" />
     </TabBar>
 
 </Shell>
