@@ -6,6 +6,8 @@
              xmlns:models="clr-namespace:WikiSum.Models"
              x:DataType="viewModel:ISummaryDetailViewModel"
              Title="SummaryDetailPage">
+    
+    
     <VerticalStackLayout>
         <Label 
             Text="See Here important elements"
@@ -16,6 +18,7 @@
         <HorizontalStackLayout 
             VerticalOptions="Center" 
             HorizontalOptions="Center">
+            
             <Button ImageSource="return.png" HorizontalOptions="Center" MaximumWidthRequest="30" Command="{Binding NavigateBackCommand}">
             
             </Button>
