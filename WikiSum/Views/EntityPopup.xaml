@@ -13,7 +13,7 @@
         <Label Margin="5" FormattedText="{Binding TextValue}" />
         <Label Margin="5" FormattedText="{Binding Category}" />
 
-        <Button Margin="5"  Text="Cancel" Command="{Binding CancelCommand}" />
+        <Button Margin="5"  Text="Close" Command="{Binding CancelCommand}" />
     </VerticalStackLayout>
 
 </ContentView>

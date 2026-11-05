@@ -83,11 +83,14 @@ namespace WikiSum.ViewModels
             int currentIndex = 0;
             foreach (CategorizedEntity entity in entities.OrderBy(e => e.Offset))
             {
+                // Debug
                 Debug.WriteLine($"[SummaryDetailViewModel]: entity offset: {entity.Offset}");
                 Debug.WriteLine($"[SummaryDetailViewModel]: entity length: {entity.Length}");
                 Debug.WriteLine($"[SummaryDetailViewModel]: entity text: {entity.Text}");
                 Debug.WriteLine($"[SummaryDetailViewModel]: entity category: {entity.Category}");
                 Debug.WriteLine($"[SummaryDetailViewModel]: Current index: {currentIndex}");
+
+                // Get unmarked text
                 if (entity.Offset > currentIndex)
                 {
                     formattedString.Spans.Add(new Span
@@ -96,6 +99,7 @@ namespace WikiSum.ViewModels
                     });
                 }
 
+                // per entity define span with click method for popup
 
                 var recognizer = new TapGestureRecognizer();
 
@@ -118,7 +122,7 @@ namespace WikiSum.ViewModels
                 currentIndex = entity.Offset + entity.Length;
             }
 
-            // remaining text
+            // Set remaining text after last entity
             if (currentIndex < paragraph.Length)
             {
                 formattedString.Spans.Add(new Span
