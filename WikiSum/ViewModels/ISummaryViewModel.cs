@@ -18,6 +18,5 @@ namespace WikiSum.ViewModels
         bool IsError { get; set; }
         string ActionMessage { get; set; }
         bool IsProcessing { get; set; }
-
     }
 }

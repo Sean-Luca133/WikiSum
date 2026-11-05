@@ -96,9 +96,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update=".env">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+	  <Folder Include="Views\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Services\API\Health\HealthRequest.cs" />
 	</ItemGroup>
 
 </Project>
