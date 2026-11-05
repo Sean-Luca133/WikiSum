@@ -2,12 +2,15 @@
 using System.Diagnostics;
 using System.Text;
 using WikiSum.Models;
+using WikiSum.Services.API.Health;
 using WikiSum.Services.API.Post;
 namespace WikiSum.Services.API
 {
     public class ApiService : IAPIService
     {
         private readonly HttpClient _httpClient;
+        private string _apiEndpoint = Environment.GetEnvironmentVariable("BACKEND_API_ENDPOINT");
+
         public ApiService(HttpClient httpClient)
         {
             _httpClient = httpClient;
@@ -15,12 +18,6 @@ namespace WikiSum.Services.API
                    "MyScraper/1.0 (contact: jouw-email@example.com)"
             );
         }
-
-        private string _apiEndpoint = Environment.GetEnvironmentVariable("BACKEND_API_ENDPOINT");
-
-
-
-        // TODO ZORG DAT DE LANGUAGE OOK MEE GAAT
         public async Task PostWebsiteAsyc(string url, List<WebsiteParagraph> websiteParagraphs, string language)
         {
             Debug.WriteLine($"[ApiService]: Posting new website to api");
@@ -44,7 +41,6 @@ namespace WikiSum.Services.API
                 .ToList()
             };
 
-            // Serialize using Newtonsoft.Json
             string json = JsonConvert.SerializeObject(
                 websiteRequest,
                 Formatting.Indented
@@ -68,25 +64,64 @@ namespace WikiSum.Services.API
 
             response.EnsureSuccessStatusCode();
         }
-        public Task GetWebsiteByIdAsync(string id)
+        public async Task<WebsiteRequest> GetWebsiteByUrlAsync(string url)
         {
-            throw new NotImplementedException();
+            string encodedUrl = Uri.EscapeDataString(url);
+
+            HttpResponseMessage response = await _httpClient.GetAsync(
+                _apiEndpoint + "Webpage/" + encodedUrl
+            );
+
+            Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
+            response.EnsureSuccessStatusCode();
+
+            var website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
+
+            return website ?? new WebsiteRequest();
         }
 
 
-        public Task DelteWebsiteByIdAsync(string id)
+        public async Task DelteWebsiteByUrlAsync(string url)
         {
-            throw new NotImplementedException();
+            string encodedUrl = Uri.EscapeDataString(url);
+
+            HttpResponseMessage response = await _httpClient.DeleteAsync(
+                _apiEndpoint + "Webpage/" + encodedUrl
+            );
+
         }
 
-        public Task GetAllWebsitesAsyc()
+        public async Task<List<WebsiteRequest>> GetAllWebsitesAsyc()
         {
-            throw new NotImplementedException();
+            HttpResponseMessage response = await _httpClient.GetAsync(_apiEndpoint + "Webpage");
+
+            Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
+            response.EnsureSuccessStatusCode();
+
+            var websites = JsonConvert.DeserializeObject<List<WebsiteRequest>>(responseBody);
+
+            return websites ?? new List<WebsiteRequest>();
         }
 
-        public Task GetApiStatus()
+        public async Task<HealthRequest> GetApiStatus()
         {
-            throw new NotImplementedException();
+            HttpResponseMessage response = await _httpClient.GetAsync(_apiEndpoint + "Health");
+
+            Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
+            response.EnsureSuccessStatusCode();
+
+            var healthRequest = JsonConvert.DeserializeObject<HealthRequest>(responseBody);
+
+            return healthRequest ?? new HealthRequest();
         }
 
 
