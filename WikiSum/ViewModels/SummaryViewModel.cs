@@ -10,6 +10,7 @@ using System.Windows.Input;
 using WikiSum.Messages;
 using WikiSum.Models;
 using WikiSum.Models.Api.Website;
+using WikiSum.Models.Api.Website.UpdateReq;
 using WikiSum.Services.API;
 using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.Navigation;
@@ -225,20 +226,140 @@ namespace WikiSum.ViewModels
                 }
 
                 await TranslateAndSummerizeResult(websiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
+                visitedWebsites.Add(new(UrlInput, Content));
+
             }
             else
             {
-                //TODO just make a summarie from the chapters given in de response, make sure to PUT this also to db
-                // IF NOT EQUAL WE NEED TO TRANSLATE
-                if (response.Language != LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)])
+                List<Task<string>> headingTasks = new();
+                List<Task<string>> summaryTasks = new();
+                if (!response.Languages.Contains(LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]))
                 {
-                    TranslateExistingSummary();
+                    (headingTasks, summaryTasks) = await TranslateExistingSummary(response);
+
 
                 }
+                // same laguage as in db/ response 
+                else
+                {
+                    foreach (ChapterRequest chapter in response.Chapters)
+                    {
+                        TranslationsRequest translation = chapter.Translations.FirstOrDefault(t => t.Language == LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
+                        SummaryRequest summary = translation.Summaries.FirstOrDefault();
+                        Debug.WriteLine($"[SummaryViewModel]: Title: {translation.Title}");
+                        Debug.WriteLine($"[SummaryViewModel]: Summary: {summary.SummaryText}");
+
+                        headingTasks.Add(Task.FromResult(translation.Title));
+                        summaryTasks.Add(Task.FromResult(summary.SummaryText));
+                    }
+                }
                 // FORMAT THE TRANSLATION FOR OUTPUT
-                throw new NotImplementedException();
+                transHeadingings = await Task.WhenAll(headingTasks);
+                transSummaries = await Task.WhenAll(summaryTasks);
+
+                if (!response.Languages.Contains(LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]))
+                {
+                    await AddTranslatedLanguageToDatabase(response);
+                }
+                // Start displaying results
+                currentListIndex = 0;
+                timer.Start();
             }
-            visitedWebsites.Add(new(UrlInput, Content));
+        }
+
+        private async Task AddTranslatedLanguageToDatabase(WebsiteRequest response)
+        {
+            string language = LanguageAbreviations[
+                LanguageOptions.GetItemByIndex(SelectedPageLanguage)
+            ];
+
+            var updateRequest = new UpdateWebpageRequest();
+
+            for (int i = 0; i < response.Chapters.Count; i++)
+            {
+                updateRequest.Chapters.Add(new UpdateChapterRequest
+                {
+                    OriginalTitle = response.Chapters[i].Translations
+                        .FirstOrDefault(t => response.Languages.Contains(t.Language))?.Title,
+
+                    Translations = new List<UpdateTranslationRequest>
+                    {
+                        new UpdateTranslationRequest
+                        {
+                            Title = transHeadingings[i],
+                            Language = language,
+                            Summaries = new List<UpdateSummaryRequest>
+                            {
+                                new UpdateSummaryRequest
+                                {
+                                    SummaryText = transSummaries[i],
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            await _apiservice.AddNewLanguageToWebsiteByUrlAsync(
+                response.Url,
+                updateRequest
+            );
+
+            Debug.WriteLine("[SummaryViewModel]: New language saved to database.");
+        }
+        private async Task<(List<Task<string>> headingTasks, List<Task<string>> summaryTasks)> TranslateExistingSummary(WebsiteRequest response)
+        {
+            string outputLanguage = LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)];
+
+            List<Task<string>> headingTasks = new();
+            List<Task<string>> summaryTasks = new();
+            foreach (ChapterRequest chapter in response.Chapters)
+            {
+                TranslationsRequest translation = chapter.Translations
+                    .FirstOrDefault(t => response.Languages.Contains(t.Language));
+
+                SummaryRequest summary = translation.Summaries.FirstOrDefault();
+                string inputLanguage = translation.Language;
+
+                Debug.WriteLine($"[SummaryViewModel]: Title: {translation.Title}");
+                Debug.WriteLine($"[SummaryViewModel]: Summary: {summary.SummaryText}");
+
+                // Translate title
+                headingTasks.Add(TranslateWithSemaphore(
+                    translation.Title,
+                    inputLanguage,
+                    outputLanguage
+                ));
+
+                // Translate summary
+                summaryTasks.Add(TranslateWithSemaphore(
+                    summary.SummaryText,
+                    inputLanguage,
+                    outputLanguage
+                ));
+            }
+            return (headingTasks, summaryTasks);
+
+        }
+        private async Task<string> TranslateWithSemaphore(
+    string text,
+    string inputLanguage,
+    string outputLanguage)
+        {
+            await translationSemaphore.WaitAsync();
+
+            try
+            {
+                return await TranslateText(
+                    text,
+                    inputLanguage,
+                    outputLanguage
+                );
+            }
+            finally
+            {
+                translationSemaphore.Release();
+            }
         }
         private void TranslateExistingSummary()
         {

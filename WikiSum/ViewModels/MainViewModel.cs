@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
-using WikiSum.Services.EntityReconition;
 using WikiSum.Models.Api.Health;
 using WikiSum.Models.Api.Website;
 using WikiSum.Services.API;
@@ -39,6 +38,8 @@ namespace WikiSum.ViewModels
         public ICommand SummarizeServiceTestCommand { get; set; }
         public ICommand SearchCommand { get; set; }
         public ICommand LanguageDetectionServiceTestCommand { get; set; }
+        public ICommand DeleteWebsiteCommand { get; set; }
+
         public ICommand GetEntitiesCommand { get; set; }
 
         public MainViewModel(IEntityRecognitionService entityRecognitionService, ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
@@ -102,6 +103,37 @@ namespace WikiSum.ViewModels
         public async Task GetAllPreviousWebsites()
         {
             List<WebsiteRequest> websites = await _apiService.GetAllWebsitesAsyc();
+
+            Websites = new ObservableCollection<WebsiteRequest>(websites);
+        }
+
+        public async Task CheckStatus()
+        {
+            HealthRequest status = await _apiService.GetApiStatus();
+            Status = "Api status: " + status.Status;
+
+                await GetAllPreviousWebsites();
+
+                Debug.WriteLine($"[MainViewModel] Loaded {Websites.Count} websites");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MainViewModel] Error: {ex.Message}");
+            }
+        }
+        public async Task GetAllPreviousWebsites()
+        {
+            List<WebsiteRequest> websites = await _apiService.GetAllWebsitesAsyc();
+
+        public async Task<List<(string, string)>?> GetWebsite()
+        {
+            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
+        }
+
+        private async Task DeleteWebsite(WebsiteRequest website)
+        {
+            if (website == null)
+                return;
 
             Websites = new ObservableCollection<WebsiteRequest>(websites);
         }

@@ -52,7 +52,7 @@
                             <Label Text="{Binding Url}"
                            FontSize="18"/>
 
-                            <Label Text="{Binding Language}"
+                            <Label Text="{Binding LanguagesText}"
                            FontSize="14"
                            TextColor="Gray"/>
                         </VerticalStackLayout>

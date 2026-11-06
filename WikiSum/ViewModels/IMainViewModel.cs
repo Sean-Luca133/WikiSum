@@ -12,7 +12,6 @@ namespace WikiSum.ViewModels
         ICommand TranslateTextCommand { get; set; }
         ICommand TranslateTestCommand { get; set; }
         ICommand SummarizeServiceTestCommand { get; set; }
-        ICommand GetEntitiesCommand { get; set; }
         ICommand DeleteWebsiteCommand { get; set; }
         string TestText { get; set; }
         string Status { get; set; }

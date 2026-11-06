@@ -4,6 +4,7 @@ using System.Text;
 using WikiSum.Models;
 using WikiSum.Models.Api.Health;
 using WikiSum.Models.Api.Website;
+using WikiSum.Models.Api.Website.UpdateReq;
 namespace WikiSum.Services.API
 {
     public class ApiService : IAPIService
@@ -29,13 +30,19 @@ namespace WikiSum.Services.API
                 Chapters = websiteParagraphs
                 .Select(paragraph => new ChapterRequest
                 {
-                    Title = paragraph.Header,
-                    Summaries = new List<SummaryRequest>
+                    Translations = new List<TranslationsRequest>
                     {
-                        new SummaryRequest
+                        new TranslationsRequest
                         {
-                            SummaryText = paragraph.ParagraphSummary,
-                            Language = language
+                            Title = paragraph.Header,
+                            Language = language,
+                            Summaries = new List<SummaryRequest>
+                            {
+                                new SummaryRequest
+                                {
+                                    SummaryText = paragraph.ParagraphSummary
+                                }
+                            }
                         }
                     }
                 })
@@ -67,21 +74,28 @@ namespace WikiSum.Services.API
         }
         public async Task<WebsiteRequest> GetWebsiteByUrlAsync(string url)
         {
-            string encodedUrl = Uri.EscapeDataString(url);
+            try
+            {
+                string encodedUrl = Uri.EscapeDataString(url);
 
-            HttpResponseMessage response = await _httpClient.GetAsync(
-                _apiEndpoint + "Webpage/" + encodedUrl
-            );
+                HttpResponseMessage response = await _httpClient.GetAsync(
+                    _apiEndpoint + "Webpage/" + encodedUrl
+                );
 
-            Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
-            string responseBody = await response.Content.ReadAsStringAsync();
+                Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
+                string responseBody = await response.Content.ReadAsStringAsync();
 
-            Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
-            response.EnsureSuccessStatusCode();
+                Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
+                response.EnsureSuccessStatusCode();
 
-            WebsiteRequest website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
+                WebsiteRequest website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
 
-            return website ?? new WebsiteRequest();
+                return website;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
 
@@ -133,6 +147,37 @@ namespace WikiSum.Services.API
             }
         }
 
+        public async Task<WebsiteRequest> AddNewLanguageToWebsiteByUrlAsync(string url, UpdateWebpageRequest request)
+        {
+            string encodedUrl = Uri.EscapeDataString(url);
 
+            string json = JsonConvert.SerializeObject(
+                request,
+                Formatting.Indented
+            );
+
+            Debug.WriteLine($"[ApiService]: PUT request:\n{json}");
+
+            using var content = new StringContent(
+                json,
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            HttpResponseMessage response = await _httpClient.PutAsync(
+                _apiEndpoint + "Webpage/" + encodedUrl,
+                content
+            );
+
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            Debug.WriteLine($"[ApiService]: PUT status: {response.StatusCode}");
+            Debug.WriteLine($"[ApiService]: PUT response: {responseBody}");
+
+            response.EnsureSuccessStatusCode();
+
+            return JsonConvert.DeserializeObject<WebsiteRequest>(responseBody)
+                   ?? new WebsiteRequest();
+        }
     }
 }
