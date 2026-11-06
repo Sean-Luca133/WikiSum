@@ -1,10 +1,12 @@
 ﻿using DotNetEnv;
 using Microsoft.Extensions.Logging;
 using WikiSum.Services;
+using WikiSum.Services.API;
+using WikiSum.Services.LanguageDetection;
+using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
-using WikiSum.Services.Scrapping;
 using WikiSum.Views;
 using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.EntityReconition;
@@ -36,10 +38,11 @@ namespace WikiSum
             builder.Services.AddSingleton<IEntityRecognitionService, EntityRecognitionService>();
             builder.Services.AddTransient<ILanguageDetectionService, LanguageDetectionService>();
             builder.Services.AddHttpClient<IScrapeService, ScrapeService>();
-            builder.Services.AddTransient<ITranslationService, TranslationService>();
-            builder.Services.AddTransient<ISummarizationService, SummarizationService>();
-            builder.Services.AddTransient<INavigationService, NavigationService>();
-          
+            builder.Services.AddSingleton<ILanguageDetectionService, LanguageDetectionService>();
+            builder.Services.AddSingleton<ITranslationService, TranslationService>();
+            builder.Services.AddSingleton<ISummarizationService, SummarizationService>();
+            builder.Services.AddHttpClient<IAPIService, ApiService>();
+
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<IMainViewModel, MainViewModel>();
 

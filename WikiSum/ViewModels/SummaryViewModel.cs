@@ -9,13 +9,14 @@ using System.Timers;
 using System.Windows.Input;
 using WikiSum.Messages;
 using WikiSum.Models;
+using WikiSum.Models.Api.Website;
+using WikiSum.Services.API;
 using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.Navigation;
 using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using Timer = System.Timers.Timer;
-
 
 
 namespace WikiSum.ViewModels
@@ -28,10 +29,11 @@ namespace WikiSum.ViewModels
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
         private ISummarizationService _summarizationService;
+        private IAPIService _apiservice;
+
         private ObservableCollection<WebsiteParagraph> content = new ObservableCollection<WebsiteParagraph>();
         private ObservableCollection<Website> visitedWebsites = new ObservableCollection<Website>();
         private SemaphoreSlim translationSemaphore = new SemaphoreSlim(5);
-
 
         // Language properties 
         public Dictionary<string, string> LanguageAbreviations { get; set; } = new Dictionary<string, string>();
@@ -66,9 +68,11 @@ namespace WikiSum.ViewModels
 
         // Summary lists (needed for timer)
         private string[] transSummaries { get; set; }
-        private string[] transHeadingings{ get; set; }
+        private string[] transHeadingings { get; set; }
         private int currentListIndex { get; set; } = 0;
         private Timer timer = new Timer(2000);
+        private string To;
+
 
 
         // Url properties
@@ -76,14 +80,25 @@ namespace WikiSum.ViewModels
         private string feedbackMessage = string.Empty;
         private bool isError = false;
         private string actionMessage = string.Empty;
-        private bool isProcessing = false; 
-        
+        private bool isProcessing = false;
+
         // Commands
         public ICommand SearchCommand { get; set; }
         public ICommand SeeDetailCommand { get; set; }
 
         public ObservableCollection<WebsiteParagraph> Content
 
+        {
+            get => content;
+            set => SetProperty(ref content, value);
+        }
+        public ObservableCollection<Website> VisitedWebsites
+        {
+            get => visitedWebsites;
+            set => SetProperty(ref visitedWebsites, value);
+        }
+
+        public ObservableCollection<WebsiteParagraph> Content
         {
             get => content;
             set => SetProperty(ref content, value);
@@ -114,7 +129,7 @@ namespace WikiSum.ViewModels
         {
             get => isError;
             set => SetProperty(ref isError, value);
-            
+
         }
         public string ActionMessage
         {
@@ -140,7 +155,23 @@ namespace WikiSum.ViewModels
 
             LanguageOptions = LanguageAbreviations.Keys.ToList();
             BindCommands();
+            _apiservice = apiservice;
+        }
 
+
+
+        private void LoadLanguageAbriviations()
+        {
+            LanguageAbreviations.Add("Dutch", "nl");
+            LanguageAbreviations.Add("English", "en");
+            LanguageAbreviations.Add("French", "fr");
+            LanguageAbreviations.Add("Spanish", "es");
+            // Extra languages can be add here
+        }
+
+        private void SetTimerEventHandeler()
+        {
+            timer.Elapsed += new ElapsedEventHandler(SummeryPerInterval);
         }
 
         
@@ -169,30 +200,49 @@ namespace WikiSum.ViewModels
         {
             // Reset propeties on new search 
             FeedbackMessage = "";
-
             IsError = false;
+
             // Start process
             IsProcessing = true;
+
             Content = new ObservableCollection<WebsiteParagraph>();
             ActionMessage = "Setting up service...";
-            
+
             // Input checks
             if (!UrlIsValid())
             {
                 return;
             }
 
-            
-            (bool ContentIsCorrect, List<(string, string)> websiteContent) = await GetWebsiteContent();
-            if (!ContentIsCorrect)
+            WebsiteRequest response = await _apiservice.GetWebsiteByUrlAsync(UrlInput);
+
+            if (response == null)
             {
-                return;
+                (bool ContentIsCorrect, List<(string, string)> websiteContent) = await GetWebsiteContent();
+                if (!ContentIsCorrect)
+                {
+                    return;
+                }
+
+                await TranslateAndSummerizeResult(websiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
             }
+            else
+            {
+                //TODO just make a summarie from the chapters given in de response, make sure to PUT this also to db
+                // IF NOT EQUAL WE NEED TO TRANSLATE
+                if (response.Language != LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)])
+                {
+                    TranslateExistingSummary();
 
-            await TranslateAndSummerizeResult(websiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
-
-
+                }
+                // FORMAT THE TRANSLATION FOR OUTPUT
+                throw new NotImplementedException();
+            }
             visitedWebsites.Add(new(UrlInput, Content));
+        }
+        private void TranslateExistingSummary()
+        {
+            throw new NotImplementedException();
         }
 
         private async Task<(bool, List<(string, string)>)> GetWebsiteContent()
@@ -219,7 +269,7 @@ namespace WikiSum.ViewModels
                 return (false, new List<(string, string)>());
             }
 
-            return (true,websiteContent);
+            return (true, websiteContent);
         }
 
         private bool UrlIsValid()
@@ -233,7 +283,6 @@ namespace WikiSum.ViewModels
                 IsProcessing = false;
                 return false;
             }
-
 
             if (!Uri.IsWellFormedUriString(UrlInput, UriKind.Absolute))
             {
@@ -254,7 +303,7 @@ namespace WikiSum.ViewModels
             // detect language based on first paragraph
             string foundLanguage = "";
             string firstParagraph = websiteContent.Select(w => w.Item2).FirstOrDefault();
-    
+
             // 5120 is the max length service allows
             if (firstParagraph.Length > 5120)
             {
@@ -318,10 +367,6 @@ namespace WikiSum.ViewModels
             }
 
 
-           
-
-
-
             Debug.WriteLine($"[SummaryViewModel]: {summaries.Count()}");
             Debug.WriteLine($"[SummaryViewModel]: {summaries.Distinct()}");
 
@@ -358,14 +403,14 @@ namespace WikiSum.ViewModels
                 {
                     translationSemaphore.Release();
                 }
-                
+
             });
 
             foreach (AbstractiveSummary summary in summaries)
             {
-                
+
                 string summaryTotal = $"{summary.Text.Replace("\n", " ")} ";
-                
+
                 Debug.WriteLine($"[SummaryViewModel]: {summaryTotal}");
                 totalSummariesList.Add(summaryTotal);
 
@@ -374,18 +419,27 @@ namespace WikiSum.ViewModels
             // Translate
             transSummaries = await Task.WhenAll(afterTranslationTasksPar);
             transHeadingings = await Task.WhenAll(afterTranslationTasksHead);
+            await PostNewWebsiteToAPI();
 
-
-            ActionMessage = "Showing results...";
             // Timer
             timer.Start();
             Debug.WriteLine("[SummaryViewModel]: Search is done");
         }
 
+        private async Task PostNewWebsiteToAPI()
+        {
+            List<WebsiteParagraph> websiteParagraphs = transHeadingings.Zip(
+                                transSummaries,
+                                (heading, summary) => new WebsiteParagraph(heading, summary)
+                            ).ToList();
+
+            await _apiservice.PostWebsiteAsyc(UrlInput, websiteParagraphs, To);
+        }
+
         private void SummeryPerInterval(object sender, ElapsedEventArgs e)
         {
 
-            if(currentListIndex >= transSummaries.Length - 1)
+            if (currentListIndex >= transSummaries.Length - 1)
             {
                 ActionMessage = string.Empty;
                 timer.Stop();
@@ -403,12 +457,12 @@ namespace WikiSum.ViewModels
                 });
                 currentListIndex++;
             }
-            
 
-            
+
         }
         private async Task<string> TranslateText(string text, string start, string to)
         {
+            To = to;
             return await _translationService.TranslateText(text, start, to);
         }
         private async Task<string?> DetectLanguage(string paragraph)
