@@ -17,5 +17,6 @@ namespace WikiSum.ViewModels
         string Status { get; set; }
         ObservableCollection<WebsiteRequest> Websites { get; set; }
         Task CheckStatus();
+        Task InitializeAsync();
     }
 }

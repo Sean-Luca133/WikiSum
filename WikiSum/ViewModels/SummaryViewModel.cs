@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Timers;
 using System.Windows.Input;
 using WikiSum.Models;
+using WikiSum.Models.Api.Website;
 using WikiSum.Services.API;
 using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.Scrapping;
@@ -178,16 +179,35 @@ namespace WikiSum.ViewModels
                 return;
             }
 
+            WebsiteRequest response = await _apiservice.GetWebsiteByUrlAsync(UrlInput);
 
-            (bool ContentIsCorrect, List<(string, string)> websiteContent) = await GetWebsiteContent();
-            if (!ContentIsCorrect)
+            if (response == null)
             {
-                return;
+                (bool ContentIsCorrect, List<(string, string)> websiteContent) = await GetWebsiteContent();
+                if (!ContentIsCorrect)
+                {
+                    return;
+                }
+
+                await TranslateAndSummerizeResult(websiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
             }
+            else
+            {
+                //TODO just make a summarie from the chapters given in de response, make sure to PUT this also to db
+                // IF NOT EQUAL WE NEED TO TRANSLATE
+                if (response.Language != LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)])
+                {
+                    TranslateExistingSummary();
 
-            await TranslateAndSummerizeResult(websiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
-
+                }
+                // FORMAT THE TRANSLATION FOR OUTPUT
+                throw new NotImplementedException();
+            }
             visitedWebsites.Add(new(UrlInput, Content));
+        }
+        private void TranslateExistingSummary()
+        {
+            throw new NotImplementedException();
         }
 
         private async Task<(bool, List<(string, string)>)> GetWebsiteContent()

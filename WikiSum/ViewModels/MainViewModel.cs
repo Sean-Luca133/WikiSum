@@ -59,8 +59,6 @@ namespace WikiSum.ViewModels
             _apiService = apiService;
             Websites = new();
             BindCommands();
-            // is het zelfde als await maar await mag je niet direct in constructor gebruiken :)
-            _ = InitializeAsync();
 
         }
         public void BindCommands()
@@ -72,7 +70,7 @@ namespace WikiSum.ViewModels
             DeleteWebsiteCommand = new AsyncRelayCommand<WebsiteRequest>(DeleteWebsite);
         }
 
-        private async Task InitializeAsync()
+        public async Task InitializeAsync()
         {
             try
             {

@@ -16,5 +16,6 @@ public partial class MainPage : ContentPage
         base.OnAppearing();
 
         await _viewModel.CheckStatus();
+        await _viewModel.InitializeAsync();
     }
 }

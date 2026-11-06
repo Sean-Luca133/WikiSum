@@ -79,7 +79,7 @@ namespace WikiSum.Services.API
             Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
             response.EnsureSuccessStatusCode();
 
-            var website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
+            WebsiteRequest website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
 
             return website ?? new WebsiteRequest();
         }
