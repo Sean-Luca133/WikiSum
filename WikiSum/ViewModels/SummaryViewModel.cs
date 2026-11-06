@@ -2,14 +2,17 @@ using AngleSharp.Common;
 using Azure.AI.TextAnalytics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Timers;
 using System.Windows.Input;
+using WikiSum.Messages;
 using WikiSum.Models;
 using WikiSum.Models.Api.Website;
 using WikiSum.Services.API;
 using WikiSum.Services.LanguageDetection;
+using WikiSum.Services.Navigation;
 using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
@@ -18,9 +21,10 @@ using Timer = System.Timers.Timer;
 
 namespace WikiSum.ViewModels
 {
-    public class SummaryViewModel : ObservableObject, ISummaryViewModel
+    public class SummaryViewModel : ObservableRecipient, ISummaryViewModel
     {
         // Services/objects
+        private INavigationService _navigationService;
         private ILanguageDetectionService _languageDetectionService;
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
@@ -80,6 +84,19 @@ namespace WikiSum.ViewModels
 
         // Commands
         public ICommand SearchCommand { get; set; }
+        public ICommand SeeDetailCommand { get; set; }
+
+        public ObservableCollection<WebsiteParagraph> Content
+
+        {
+            get => content;
+            set => SetProperty(ref content, value);
+        }
+        public ObservableCollection<Website> VisitedWebsites
+        {
+            get => visitedWebsites;
+            set => SetProperty(ref visitedWebsites, value);
+        }
 
         public ObservableCollection<WebsiteParagraph> Content
         {
@@ -126,8 +143,9 @@ namespace WikiSum.ViewModels
         }
 
 
-        public SummaryViewModel(ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService, IAPIService apiservice)
+        public SummaryViewModel(INavigationService navigationService,ILanguageDetectionService languageDetectionService,ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
         {
+            _navigationService = navigationService;
             _languageDetectionService = languageDetectionService;
             _translationService = translationService;
             _summarizationService = summarizationService;
@@ -156,9 +174,26 @@ namespace WikiSum.ViewModels
             timer.Elapsed += new ElapsedEventHandler(SummeryPerInterval);
         }
 
+        
+
+        private void LoadLanguageAbriviations()
+        {
+            LanguageAbreviations.Add("Dutch", "nl");
+            LanguageAbreviations.Add("English", "en");
+            LanguageAbreviations.Add("French", "fr");
+            LanguageAbreviations.Add("Spanish", "es");
+            // Extra languages can be add here
+        }
+        
+        private void SetTimerEventHandeler()
+        {
+            timer.Elapsed += new ElapsedEventHandler(SummeryPerInterval);
+        }
+
         public void BindCommands()
         {
             SearchCommand = new AsyncRelayCommand(GetSummary);
+            SeeDetailCommand = new AsyncRelayCommand<WebsiteParagraph>(SeeDetail);
         }
 
         public async Task GetSummary()
@@ -248,7 +283,6 @@ namespace WikiSum.ViewModels
                 IsProcessing = false;
                 return false;
             }
-
 
             if (!Uri.IsWellFormedUriString(UrlInput, UriKind.Absolute))
             {
@@ -442,6 +476,14 @@ namespace WikiSum.ViewModels
             return await _summarizationService.SummarizeText(document);
         }
 
+        private async Task SeeDetail(WebsiteParagraph paragraph)
+        {  
+            Debug.WriteLine($"[SummaryViewModel]: Send message: {paragraph}");
+            await _navigationService.NavigateToDetailAsync();
+            WeakReferenceMessenger.Default.Send(new ChosenSummaryMessage(paragraph));
+            
+        }
 
+       
     }
 }

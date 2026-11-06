@@ -4,14 +4,10 @@ using Azure.AI.TextAnalytics;
 namespace WikiSum.Services.Sumerization
 {
 
-    public static class ApiLanguagenKeys
+
+    public class SummarizationService: ISummarizationService
     {
-        public static string LanguagerKey = Environment.GetEnvironmentVariable("LANGUAGE_KEY");
-        public static string LanguageEndpoint = Environment.GetEnvironmentVariable("LANGUAGE_ENDPOINT");
-    }
-    public class SummarizationService : ISummarizationService
-    {
-        private TextAnalyticsClient client = new(new Uri(ApiLanguagenKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguagenKeys.LanguagerKey));
+        private TextAnalyticsClient client = new(new Uri(ApiLanguageKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguageKeys.LanguagerKey));
 
         // Perform the text analysis operation.
         public async Task<AbstractiveSummarizeOperation> SummarizeText(List<string> document)
