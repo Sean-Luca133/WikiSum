@@ -55,12 +55,11 @@
                             <Label Text="{Binding Url}"
                            FontSize="18"/>
 
-                            <Label Text="{Binding Language}"
+                            <Label Text="{Binding LanguagesText}"
                            FontSize="14"
                            TextColor="Gray"/>
                         </VerticalStackLayout>
 
-                        <!-- Button binnen DataTemplate = WebsiteRequest maar onze functie deleteWebsiteCommand is een MainViewModel functie dus moeten we zo hier naar verwijzen-->
                         <Button Text="Delete"
                         BackgroundColor="Red"
                         TextColor="White"

@@ -2,7 +2,7 @@
 {
     public class ChapterRequest
     {
-        public string Title { get; set; }
-        public List<SummaryRequest> Summaries { get; set; } = new();
+        public int WebpageId { get; set; }
+        public List<TranslationsRequest> Translations { get; set; } = new();
     }
 }

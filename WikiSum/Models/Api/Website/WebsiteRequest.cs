@@ -5,9 +5,13 @@
         public string Url { get; set; }
         public List<ChapterRequest> Chapters { get; set; } = new();
 
-        public string Language =>
-        Chapters.FirstOrDefault()?
-            .Summaries.FirstOrDefault()?
-            .Language ?? "Unknown";
+        public string LanguagesText =>
+    string.Join(", ", Languages);
+        public List<string> Languages =>
+        Chapters
+            .SelectMany(c => c.Translations)
+            .Select(t => t.Language)
+            .Distinct()
+            .ToList();
     }
 }
