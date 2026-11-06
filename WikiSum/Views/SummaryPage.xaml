@@ -31,6 +31,7 @@
             </Picker>
 
             <Button Command="{Binding SearchCommand}" Text="Search"/>
+
             </HorizontalStackLayout>
             <Border MaximumWidthRequest="500" Stroke="Red" StrokeThickness="3" StrokeShape="RoundRectangle 10" IsVisible="{Binding IsError}">
                 <Label Text="{Binding FeedbackMessage}" TextColor="Red" Background="LightPink" Padding="20" FontSize="16" />
@@ -43,11 +44,17 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:WebsiteParagraph">
                         <VerticalStackLayout>
-                            <Label HorizontalOptions="Center" Text="{Binding Header }" FontAttributes="Bold" FontSize="30" />
+                            <HorizontalStackLayout HorizontalOptions="Center" Margin="0,20,0,20" Spacing="15">
+                                
+                                <Label HorizontalOptions="Center" Text="{Binding Header }" FontAttributes="Bold" FontSize="30" />
+
+                                <Button Text="View Important words"  Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                          Path=BindingContext.SeeDetailCommand}" CommandParameter="{Binding .}" TextColor="Black" BorderWidth="1" BackgroundColor="LightBlue" BorderColor="DarkBlue"/>
+                                
+                            </HorizontalStackLayout>
                             <Label Text="{Binding ParagraphSummary}" 
                                    MaximumWidthRequest="750"
                                    Margin="0,10,0,20"/>
-
                         </VerticalStackLayout>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

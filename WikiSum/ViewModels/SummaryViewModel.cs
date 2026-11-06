@@ -2,13 +2,18 @@ using AngleSharp.Common;
 using Azure.AI.TextAnalytics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Timers;
 using System.Windows.Input;
+using WikiSum.Messages;
 using WikiSum.Models;
+using WikiSum.Models.Api.Website;
+using WikiSum.Models.Api.Website.UpdateReq;
 using WikiSum.Services.API;
 using WikiSum.Services.LanguageDetection;
+using WikiSum.Services.Navigation;
 using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
@@ -17,9 +22,10 @@ using Timer = System.Timers.Timer;
 
 namespace WikiSum.ViewModels
 {
-    public class SummaryViewModel : ObservableObject, ISummaryViewModel
+    public class SummaryViewModel : ObservableRecipient, ISummaryViewModel
     {
         // Services/objects
+        private INavigationService _navigationService;
         private ILanguageDetectionService _languageDetectionService;
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
@@ -79,6 +85,19 @@ namespace WikiSum.ViewModels
 
         // Commands
         public ICommand SearchCommand { get; set; }
+        public ICommand SeeDetailCommand { get; set; }
+
+        public ObservableCollection<WebsiteParagraph> Content
+
+        {
+            get => content;
+            set => SetProperty(ref content, value);
+        }
+        public ObservableCollection<Website> VisitedWebsites
+        {
+            get => visitedWebsites;
+            set => SetProperty(ref visitedWebsites, value);
+        }
 
         public ObservableCollection<WebsiteParagraph> Content
         {
@@ -125,8 +144,9 @@ namespace WikiSum.ViewModels
         }
 
 
-        public SummaryViewModel(ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService, IAPIService apiservice)
+        public SummaryViewModel(INavigationService navigationService,ILanguageDetectionService languageDetectionService,ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
         {
+            _navigationService = navigationService;
             _languageDetectionService = languageDetectionService;
             _translationService = translationService;
             _summarizationService = summarizationService;
@@ -155,9 +175,26 @@ namespace WikiSum.ViewModels
             timer.Elapsed += new ElapsedEventHandler(SummeryPerInterval);
         }
 
+        
+
+        private void LoadLanguageAbriviations()
+        {
+            LanguageAbreviations.Add("Dutch", "nl");
+            LanguageAbreviations.Add("English", "en");
+            LanguageAbreviations.Add("French", "fr");
+            LanguageAbreviations.Add("Spanish", "es");
+            // Extra languages can be add here
+        }
+        
+        private void SetTimerEventHandeler()
+        {
+            timer.Elapsed += new ElapsedEventHandler(SummeryPerInterval);
+        }
+
         public void BindCommands()
         {
             SearchCommand = new AsyncRelayCommand(GetSummary);
+            SeeDetailCommand = new AsyncRelayCommand<WebsiteParagraph>(SeeDetail);
         }
 
         public async Task GetSummary()
@@ -178,16 +215,155 @@ namespace WikiSum.ViewModels
                 return;
             }
 
+            WebsiteRequest response = await _apiservice.GetWebsiteByUrlAsync(UrlInput);
 
-            (bool ContentIsCorrect, List<(string, string)> websiteContent) = await GetWebsiteContent();
-            if (!ContentIsCorrect)
+            if (response == null)
             {
-                return;
+                (bool ContentIsCorrect, List<(string, string)> websiteContent) = await GetWebsiteContent();
+                if (!ContentIsCorrect)
+                {
+                    return;
+                }
+
+                await TranslateAndSummerizeResult(websiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
+                visitedWebsites.Add(new(UrlInput, Content));
+
+            }
+            else
+            {
+                List<Task<string>> headingTasks = new();
+                List<Task<string>> summaryTasks = new();
+                if (!response.Languages.Contains(LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]))
+                {
+                    (headingTasks, summaryTasks) = await TranslateExistingSummary(response);
+
+
+                }
+                // same laguage as in db/ response 
+                else
+                {
+                    foreach (ChapterRequest chapter in response.Chapters)
+                    {
+                        TranslationsRequest translation = chapter.Translations.FirstOrDefault(t => t.Language == LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
+                        SummaryRequest summary = translation.Summaries.FirstOrDefault();
+                        Debug.WriteLine($"[SummaryViewModel]: Title: {translation.Title}");
+                        Debug.WriteLine($"[SummaryViewModel]: Summary: {summary.SummaryText}");
+
+                        headingTasks.Add(Task.FromResult(translation.Title));
+                        summaryTasks.Add(Task.FromResult(summary.SummaryText));
+                    }
+                }
+                // FORMAT THE TRANSLATION FOR OUTPUT
+                transHeadingings = await Task.WhenAll(headingTasks);
+                transSummaries = await Task.WhenAll(summaryTasks);
+
+                if (!response.Languages.Contains(LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]))
+                {
+                    await AddTranslatedLanguageToDatabase(response);
+                }
+                // Start displaying results
+                currentListIndex = 0;
+                timer.Start();
+            }
+        }
+
+        private async Task AddTranslatedLanguageToDatabase(WebsiteRequest response)
+        {
+            string language = LanguageAbreviations[
+                LanguageOptions.GetItemByIndex(SelectedPageLanguage)
+            ];
+
+            var updateRequest = new UpdateWebpageRequest();
+
+            for (int i = 0; i < response.Chapters.Count; i++)
+            {
+                updateRequest.Chapters.Add(new UpdateChapterRequest
+                {
+                    OriginalTitle = response.Chapters[i].Translations
+                        .FirstOrDefault(t => response.Languages.Contains(t.Language))?.Title,
+
+                    Translations = new List<UpdateTranslationRequest>
+                    {
+                        new UpdateTranslationRequest
+                        {
+                            Title = transHeadingings[i],
+                            Language = language,
+                            Summaries = new List<UpdateSummaryRequest>
+                            {
+                                new UpdateSummaryRequest
+                                {
+                                    SummaryText = transSummaries[i],
+                                }
+                            }
+                        }
+                    }
+                });
             }
 
-            await TranslateAndSummerizeResult(websiteContent, LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]);
+            await _apiservice.AddNewLanguageToWebsiteByUrlAsync(
+                response.Url,
+                updateRequest
+            );
 
-            visitedWebsites.Add(new(UrlInput, Content));
+            Debug.WriteLine("[SummaryViewModel]: New language saved to database.");
+        }
+        private async Task<(List<Task<string>> headingTasks, List<Task<string>> summaryTasks)> TranslateExistingSummary(WebsiteRequest response)
+        {
+            string outputLanguage = LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)];
+
+            List<Task<string>> headingTasks = new();
+            List<Task<string>> summaryTasks = new();
+            foreach (ChapterRequest chapter in response.Chapters)
+            {
+                TranslationsRequest translation = chapter.Translations
+                    .FirstOrDefault(t => response.Languages.Contains(t.Language));
+
+                SummaryRequest summary = translation.Summaries.FirstOrDefault();
+                string inputLanguage = translation.Language;
+
+                Debug.WriteLine($"[SummaryViewModel]: Title: {translation.Title}");
+                Debug.WriteLine($"[SummaryViewModel]: Summary: {summary.SummaryText}");
+
+                // Translate title
+                headingTasks.Add(TranslateWithSemaphore(
+                    translation.Title,
+                    inputLanguage,
+                    outputLanguage
+                ));
+
+                // Translate summary
+                summaryTasks.Add(TranslateWithSemaphore(
+                    summary.SummaryText,
+                    inputLanguage,
+                    outputLanguage
+                ));
+            }
+            return (headingTasks, summaryTasks);
+
+        }
+        private async Task<string> TranslateWithSemaphore(
+    string text,
+    string inputLanguage,
+    string outputLanguage)
+        {
+            await translationSemaphore.WaitAsync();
+
+            try
+            {
+                return await TranslateText(
+                    text,
+                    inputLanguage,
+                    outputLanguage
+                );
+            }
+            finally
+            {
+                translationSemaphore.Release();
+            }
+        }
+        private void TranslateExistingSummary()
+        {
+            throw new NotImplementedException();
         }
 
         private async Task<(bool, List<(string, string)>)> GetWebsiteContent()
@@ -228,7 +404,6 @@ namespace WikiSum.ViewModels
                 IsProcessing = false;
                 return false;
             }
-
 
             if (!Uri.IsWellFormedUriString(UrlInput, UriKind.Absolute))
             {
@@ -422,6 +597,14 @@ namespace WikiSum.ViewModels
             return await _summarizationService.SummarizeText(document);
         }
 
+        private async Task SeeDetail(WebsiteParagraph paragraph)
+        {  
+            Debug.WriteLine($"[SummaryViewModel]: Send message: {paragraph}");
+            await _navigationService.NavigateToDetailAsync();
+            WeakReferenceMessenger.Default.Send(new ChosenSummaryMessage(paragraph));
+            
+        }
 
+       
     }
 }

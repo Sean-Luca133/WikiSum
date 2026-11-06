@@ -2,8 +2,9 @@
 using System.Diagnostics;
 using System.Text;
 using WikiSum.Models;
-using WikiSum.Services.API.Health;
-using WikiSum.Services.API.Post;
+using WikiSum.Models.Api.Health;
+using WikiSum.Models.Api.Website;
+using WikiSum.Models.Api.Website.UpdateReq;
 namespace WikiSum.Services.API
 {
     public class ApiService : IAPIService
@@ -18,6 +19,7 @@ namespace WikiSum.Services.API
                    "MyScraper/1.0 (contact: jouw-email@example.com)"
             );
         }
+        //TODO ZET ALLES IN TRY CATCH BLOKKEN
         public async Task PostWebsiteAsyc(string url, List<WebsiteParagraph> websiteParagraphs, string language)
         {
             Debug.WriteLine($"[ApiService]: Posting new website to api");
@@ -28,13 +30,19 @@ namespace WikiSum.Services.API
                 Chapters = websiteParagraphs
                 .Select(paragraph => new ChapterRequest
                 {
-                    Title = paragraph.Header,
-                    Summaries = new List<SummaryRequest>
+                    Translations = new List<TranslationsRequest>
                     {
-                        new SummaryRequest
+                        new TranslationsRequest
                         {
-                            SummaryText = paragraph.ParagraphSummary,
-                            Language = language
+                            Title = paragraph.Header,
+                            Language = language,
+                            Summaries = new List<SummaryRequest>
+                            {
+                                new SummaryRequest
+                                {
+                                    SummaryText = paragraph.ParagraphSummary
+                                }
+                            }
                         }
                     }
                 })
@@ -66,21 +74,28 @@ namespace WikiSum.Services.API
         }
         public async Task<WebsiteRequest> GetWebsiteByUrlAsync(string url)
         {
-            string encodedUrl = Uri.EscapeDataString(url);
+            try
+            {
+                string encodedUrl = Uri.EscapeDataString(url);
 
-            HttpResponseMessage response = await _httpClient.GetAsync(
-                _apiEndpoint + "Webpage/" + encodedUrl
-            );
+                HttpResponseMessage response = await _httpClient.GetAsync(
+                    _apiEndpoint + "Webpage/" + encodedUrl
+                );
 
-            Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
-            string responseBody = await response.Content.ReadAsStringAsync();
+                Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
+                string responseBody = await response.Content.ReadAsStringAsync();
 
-            Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
-            response.EnsureSuccessStatusCode();
+                Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
+                response.EnsureSuccessStatusCode();
 
-            var website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
+                WebsiteRequest website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
 
-            return website ?? new WebsiteRequest();
+                return website;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
 
@@ -111,19 +126,58 @@ namespace WikiSum.Services.API
 
         public async Task<HealthRequest> GetApiStatus()
         {
-            HttpResponseMessage response = await _httpClient.GetAsync(_apiEndpoint + "Health");
-
-            Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
-            string responseBody = await response.Content.ReadAsStringAsync();
-
-            Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
-            response.EnsureSuccessStatusCode();
-
-            var healthRequest = JsonConvert.DeserializeObject<HealthRequest>(responseBody);
-
-            return healthRequest ?? new HealthRequest();
+            try
+            {
+                HttpResponseMessage response = await _httpClient.GetAsync(_apiEndpoint + "Health");
+                Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
+                response.EnsureSuccessStatusCode();
+                return JsonConvert.DeserializeObject<HealthRequest>(responseBody);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($"[ApiService]: Error with message :{e.Message}");
+                return new()
+                {
+                    Status = "Not Healthy",
+                    Message = "404",
+                    Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+            }
         }
 
+        public async Task<WebsiteRequest> AddNewLanguageToWebsiteByUrlAsync(string url, UpdateWebpageRequest request)
+        {
+            string encodedUrl = Uri.EscapeDataString(url);
 
+            string json = JsonConvert.SerializeObject(
+                request,
+                Formatting.Indented
+            );
+
+            Debug.WriteLine($"[ApiService]: PUT request:\n{json}");
+
+            using var content = new StringContent(
+                json,
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            HttpResponseMessage response = await _httpClient.PutAsync(
+                _apiEndpoint + "Webpage/" + encodedUrl,
+                content
+            );
+
+            string responseBody = await response.Content.ReadAsStringAsync();
+
+            Debug.WriteLine($"[ApiService]: PUT status: {response.StatusCode}");
+            Debug.WriteLine($"[ApiService]: PUT response: {responseBody}");
+
+            response.EnsureSuccessStatusCode();
+
+            return JsonConvert.DeserializeObject<WebsiteRequest>(responseBody)
+                   ?? new WebsiteRequest();
+        }
     }
 }

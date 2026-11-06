@@ -8,6 +8,7 @@ namespace WikiSum.ViewModels
     {
         Task GetSummary();
         ICommand SearchCommand { get; set; }
+        ICommand SeeDetailCommand { get; set; }
         ObservableCollection<WebsiteParagraph> Content { get; set; }
         ObservableCollection<Website> VisitedWebsites { get; set; }
         List<string> LanguageOptions { get; set; }
