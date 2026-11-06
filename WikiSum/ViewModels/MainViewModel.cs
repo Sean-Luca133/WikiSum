@@ -17,6 +17,7 @@ namespace WikiSum.ViewModels
 {
     public class MainViewModel : ObservableObject, IMainViewModel
     {
+        private IEntityRecognitionService _entityRecognitionService;
         private ILanguageDetectionService _languageDetectionService;
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
@@ -24,12 +25,24 @@ namespace WikiSum.ViewModels
         private IAPIService _apiService;
         public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
+        string document =
+        "We love this trail and make the trip every year. The views are breathtaking and well worth the hike!"
+        + " Yesterday was foggy though, so we missed the spectacular views. We tried again today and it was"
+        + " amazing. Everyone in my family liked the trail although it was too challenging for the less"
+        + " athletic among us. Not necessarily recommended for small children. A hotel close to the trail"
+        + " offers services for childcare in case you want that.";
+
         private string _status = "Fetching api status ...";
         private ObservableCollection<WebsiteRequest> _websites;
         public ICommand TranslateTestCommand { get; set; }
         public ICommand SummarizeServiceTestCommand { get; set; }
         public ICommand SearchCommand { get; set; }
         public ICommand LanguageDetectionServiceTestCommand { get; set; }
+        public ICommand DeleteWebsiteCommand { get; set; }
+
+        public ICommand GetEntitiesCommand { get; set; }
+
+        public MainViewModel(IEntityRecognitionService entityRecognitionService, ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
         public ICommand DeleteWebsiteCommand { get; set; }
 
         public ICommand CheckStatusCommand { get; set; }
@@ -56,6 +69,7 @@ namespace WikiSum.ViewModels
             _translationService = translationService;
             _summarizationService = summarizationService;
             _scrapeService = scrapeService;
+            _entityRecognitionService = entityRecognitionService;
             _apiService = apiService;
             Websites = new();
             BindCommands();
@@ -67,6 +81,7 @@ namespace WikiSum.ViewModels
             SearchCommand = new AsyncRelayCommand(GetWebsite);
             TranslateTestCommand = new AsyncRelayCommand(TranslateTest);
             SummarizeServiceTestCommand = new AsyncRelayCommand(SummarizeTest);
+            GetEntitiesCommand = new AsyncRelayCommand(GetEntities);
             DeleteWebsiteCommand = new AsyncRelayCommand<WebsiteRequest>(DeleteWebsite);
         }
 
@@ -88,6 +103,37 @@ namespace WikiSum.ViewModels
         public async Task GetAllPreviousWebsites()
         {
             List<WebsiteRequest> websites = await _apiService.GetAllWebsitesAsyc();
+
+            Websites = new ObservableCollection<WebsiteRequest>(websites);
+        }
+
+        public async Task CheckStatus()
+        {
+            HealthRequest status = await _apiService.GetApiStatus();
+            Status = "Api status: " + status.Status;
+
+                await GetAllPreviousWebsites();
+
+                Debug.WriteLine($"[MainViewModel] Loaded {Websites.Count} websites");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[MainViewModel] Error: {ex.Message}");
+            }
+        }
+        public async Task GetAllPreviousWebsites()
+        {
+            List<WebsiteRequest> websites = await _apiService.GetAllWebsitesAsyc();
+
+        public async Task<List<(string, string)>?> GetWebsite()
+        {
+            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
+        }
+
+        private async Task DeleteWebsite(WebsiteRequest website)
+        {
+            if (website == null)
+                return;
 
             Websites = new ObservableCollection<WebsiteRequest>(websites);
         }
@@ -143,6 +189,23 @@ namespace WikiSum.ViewModels
 
         }
 
+        private async Task GetEntities()
+        {
+            CategorizedEntityCollection entitiesInDocument = _entityRecognitionService.GetNamedEntities(document);
+            Debug.WriteLine($"[MainViewModel]: Recognized {entitiesInDocument.Count} entities:");
+            foreach (CategorizedEntity entity in entitiesInDocument)
+            {
+                Debug.WriteLine($"[MainViewModel]:  Text: {entity.Text}");
+                Debug.WriteLine($"[MainViewModel]:  Offset: {entity.Offset}");
+                Debug.WriteLine($"[MainViewModel]:  Length: {entity.Length}");
+                Debug.WriteLine($"[MainViewModel]:  Category: {entity.Category}");
+                if (!string.IsNullOrEmpty(entity.SubCategory))
+                    Debug.WriteLine($"[MainViewModel]:  SubCategory: {entity.SubCategory}");
+                Debug.WriteLine($"[MainViewModel]:  Confidence score: {entity.ConfidenceScore}");
+
+            }
+        }
+    
         private async Task SummarizeTest()
         {
             List<(string, string)>? documents = await GetWebsite();
@@ -181,5 +244,6 @@ namespace WikiSum.ViewModels
             TestText = await TranslateText(TestText, "en", "nl");
             Debug.WriteLine(TestText);
         }
+
     }
 }

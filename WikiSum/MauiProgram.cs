@@ -8,6 +8,11 @@ using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
 using WikiSum.Views;
+using WikiSum.Services.LanguageDetection;
+using WikiSum.Services.EntityReconition;
+using WikiSum.Services.Navigation;
+using CommunityToolkit.Maui;
+using CommunityToolkit.Maui.Services;
 
 namespace WikiSum
 {
@@ -30,6 +35,8 @@ namespace WikiSum
             builder.Logging.AddDebug();
 #endif
             Env.Load();
+            builder.Services.AddSingleton<IEntityRecognitionService, EntityRecognitionService>();
+            builder.Services.AddTransient<ILanguageDetectionService, LanguageDetectionService>();
             builder.Services.AddHttpClient<IScrapeService, ScrapeService>();
             builder.Services.AddSingleton<ILanguageDetectionService, LanguageDetectionService>();
             builder.Services.AddSingleton<ITranslationService, TranslationService>();
@@ -42,7 +49,17 @@ namespace WikiSum
             builder.Services.AddTransient<SummaryPage>();
             builder.Services.AddTransient<ISummaryViewModel, SummaryViewModel>();
 
+            builder.Services.AddTransient<SummaryDetailPage>();
+            builder.Services.AddTransient<ISummaryDetailViewModel, SummaryDetailViewModel>();
 
+            builder.Services.AddTransient<EntityPopup>();
+            builder.Services.AddTransient<EntityPopupViewModel>();
+            builder.Services.AddTransient<IPopupService, PopupService>();
+            builder.Services.AddTransientPopup<EntityPopup, EntityPopupViewModel>();
+
+            builder
+            .UseMauiApp<App>()
+            .UseMauiCommunityToolkit();
             return builder.Build();
         }
     }
