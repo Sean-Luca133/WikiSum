@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using System.Text;
 using WikiSum.Models;
-using WikiSum.Services.API.Health;
-using WikiSum.Services.API.Post;
+using WikiSum.Models.Api.Health;
+using WikiSum.Models.Api.Website;
 namespace WikiSum.Services.API
 {
     public class ApiService : IAPIService
@@ -18,6 +18,7 @@ namespace WikiSum.Services.API
                    "MyScraper/1.0 (contact: jouw-email@example.com)"
             );
         }
+        //TODO ZET ALLES IN TRY CATCH BLOKKEN
         public async Task PostWebsiteAsyc(string url, List<WebsiteParagraph> websiteParagraphs, string language)
         {
             Debug.WriteLine($"[ApiService]: Posting new website to api");
@@ -78,7 +79,7 @@ namespace WikiSum.Services.API
             Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
             response.EnsureSuccessStatusCode();
 
-            var website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
+            WebsiteRequest website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
 
             return website ?? new WebsiteRequest();
         }
@@ -111,17 +112,25 @@ namespace WikiSum.Services.API
 
         public async Task<HealthRequest> GetApiStatus()
         {
-            HttpResponseMessage response = await _httpClient.GetAsync(_apiEndpoint + "Health");
-
-            Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
-            string responseBody = await response.Content.ReadAsStringAsync();
-
-            Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
-            response.EnsureSuccessStatusCode();
-
-            var healthRequest = JsonConvert.DeserializeObject<HealthRequest>(responseBody);
-
-            return healthRequest ?? new HealthRequest();
+            try
+            {
+                HttpResponseMessage response = await _httpClient.GetAsync(_apiEndpoint + "Health");
+                Debug.WriteLine($"[ApiService]: Response status: {response.StatusCode}");
+                string responseBody = await response.Content.ReadAsStringAsync();
+                Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
+                response.EnsureSuccessStatusCode();
+                return JsonConvert.DeserializeObject<HealthRequest>(responseBody);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($"[ApiService]: Error with message :{e.Message}");
+                return new()
+                {
+                    Status = "Not Healthy",
+                    Message = "404",
+                    Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+            }
         }
 
 

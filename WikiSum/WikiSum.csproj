@@ -99,8 +99,4 @@
 	  <Folder Include="Views\" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <None Include="Services\API\Health\HealthRequest.cs" />
-	</ItemGroup>
-
 </Project>

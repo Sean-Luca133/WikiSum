@@ -1,6 +1,6 @@
 ﻿using WikiSum.Models;
-using WikiSum.Services.API.Health;
-using WikiSum.Services.API.Post;
+using WikiSum.Models.Api.Health;
+using WikiSum.Models.Api.Website;
 
 namespace WikiSum.Services.API
 {

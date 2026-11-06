@@ -1,4 +1,4 @@
-﻿namespace WikiSum.Services.API.Post
+﻿namespace WikiSum.Models.Api.Website
 {
     public class ChapterRequest
     {

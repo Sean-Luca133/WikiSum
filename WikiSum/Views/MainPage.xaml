@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WikiSum.Views.MainPage"
              xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
+             xmlns:website_models="clr-namespace:WikiSum.Models.Api.Website"
              x:DataType="viewModel:IMainViewModel"
              Title="MainPage">
 
@@ -13,19 +14,63 @@
         <ToolbarItem Text="Detect Language" Command="{Binding LanguageDetectionServiceTestCommand}" />
         <ToolbarItem Text="Find Entities" Command="{Binding GetEntitiesCommand}" />
     </ContentPage.ToolbarItems>
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to WikiSum"
-            FontSize="24"
-            FontAttributes="Bold"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
 
-        <Image Source="wikisum_logo.png" 
+    <VerticalStackLayout Spacing="10">
+
+        <Label Text="Welcome to WikiSum"
+               FontSize="24"
+               FontAttributes="Bold"
+               VerticalOptions="Center"
+               HorizontalOptions="Center" />
+
+        <Image Source="wikisum_logo.png"
                SemanticProperties.Description="WikiSum logo"
-               Aspect="AspectFit" 
+               Aspect="AspectFit"
                HeightRequest="250"/>
-        <Label FontSize="16" Margin="0,20,0,0" MaximumWidthRequest="650" HorizontalTextAlignment="Center"  Text="This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description. This will be the description." VerticalOptions="End" />
+
+        <Label FontSize="16"
+               Margin="0,20,0,0"
+               MaximumWidthRequest="650"
+               HorizontalTextAlignment="Center"
+               Text="This will be the description."
+               VerticalOptions="End" />
+
+        <Label FontSize="16"
+               Margin="0,20,0,0"
+               MaximumWidthRequest="650"
+               HorizontalTextAlignment="Center"
+               Text="{Binding Status}" />
+
+        <CollectionView ItemsSource="{Binding Websites}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="website_models:WebsiteRequest">
+
+                    <HorizontalStackLayout Padding="10"
+                                   Spacing="10">
+
+                        <VerticalStackLayout>
+                            <Label Text="{Binding Url}"
+                           FontSize="18"/>
+
+                            <Label Text="{Binding Language}"
+                           FontSize="14"
+                           TextColor="Gray"/>
+                        </VerticalStackLayout>
+
+                        <!-- Button binnen DataTemplate = WebsiteRequest maar onze functie deleteWebsiteCommand is een MainViewModel functie dus moeten we zo hier naar verwijzen-->
+                        <Button Text="Delete"
+                        BackgroundColor="Red"
+                        TextColor="White"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                          Path=BindingContext.DeleteWebsiteCommand}"
+                        CommandParameter="{Binding .}"/>
+
+                    </HorizontalStackLayout>
+
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
     </VerticalStackLayout>
+
 </ContentPage>
