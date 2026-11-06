@@ -7,7 +7,7 @@ using WikiSum.Views;
 
 namespace WikiSum.Services.Navigation
 {
-    internal class NavigationService : INavigationService
+    public class NavigationService : INavigationService
     {
         private INavigation _navigation;
         private IServiceProvider _serviceProvider;
