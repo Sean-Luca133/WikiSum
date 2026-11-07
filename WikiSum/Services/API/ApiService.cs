@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Net;
 using System.Text;
 using WikiSum.Models;
 using WikiSum.Models.Api.Health;
@@ -86,7 +87,12 @@ namespace WikiSum.Services.API
                 string responseBody = await response.Content.ReadAsStringAsync();
 
                 Debug.WriteLine($"[ApiService]: Response body: {responseBody}");
-                response.EnsureSuccessStatusCode();
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    Debug.WriteLine("[ApiService]: Website niet gevonden (404)");
+                    return null;
+                }
 
                 WebsiteRequest website = JsonConvert.DeserializeObject<WebsiteRequest>(responseBody);
 
