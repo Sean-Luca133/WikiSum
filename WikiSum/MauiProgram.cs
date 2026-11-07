@@ -1,14 +1,18 @@
-﻿using DotNetEnv;
+﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using WikiSum.Services;
 using WikiSum.Services.API;
+using WikiSum.Services.EntityReconition;
 using WikiSum.Services.LanguageDetection;
+using WikiSum.Services.Navigation;
 using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
 using WikiSum.Views;
-using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.EntityReconition;
 using WikiSum.Services.Navigation;
 using CommunityToolkit.Maui;
@@ -20,25 +24,41 @@ namespace WikiSum
     {
         public static MauiApp CreateMauiApp()
         {
-            Env.Load();
 
             var builder = MauiApp.CreateBuilder();
-            builder
-                .UseMauiApp<App>()
-                .ConfigureFonts(fonts =>
-                {
-                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                });
+
+            // Laad appsettings.json via MAUI Essentials FileSystem
+            try
+            {
+                using var stream = FileSystem.OpenAppPackageFileAsync("appsettings.json").Result;
+                var config = new ConfigurationBuilder()
+                    .AddJsonStream(stream)
+                    .Build();
+
+                // Koppel alle instellingen aan Environment variables zodat ApiLanguageKeys ze pakt
+                Settings.LanguageKey = config["LANGUAGE_KEY"];
+                Settings.LanguageEndpoint = config["LANGUAGE_ENDPOINT"];
+                Settings.TranslatorKey = config["TRANSLATOR_KEY"];
+                Settings.TranslatorRegion = config["TRANSLATOR_REGION"];
+                Settings.TranslatorEndpoint = config["TRANSLATOR_ENDPOINT"];
+                Settings.BackendApiEndpoint = config["BACKEND_API_ENDPOINT"];
+
+                builder.Configuration.AddConfiguration(config);
+                Debug.WriteLine($"Succesvol geladen van de appsettings.json");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Fout bij laden van appsettings.json: {ex.Message}");
+            }
 
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-            Env.Load();
+
+            // Services registreren (dubbele ILanguageDetectionService verwijderd)
             builder.Services.AddSingleton<IEntityRecognitionService, EntityRecognitionService>();
-            builder.Services.AddTransient<ILanguageDetectionService, LanguageDetectionService>();
-            builder.Services.AddHttpClient<IScrapeService, ScrapeService>();
             builder.Services.AddSingleton<ILanguageDetectionService, LanguageDetectionService>();
+            builder.Services.AddHttpClient<IScrapeService, ScrapeService>();
             builder.Services.AddSingleton<ITranslationService, TranslationService>();
             builder.Services.AddSingleton<ISummarizationService, SummarizationService>();
             builder.Services.AddHttpClient<IAPIService, ApiService>();
@@ -61,10 +81,16 @@ namespace WikiSum
             builder.Services.AddTransient<IPopupService, PopupService>();
             builder.Services.AddTransientPopup<EntityPopup, EntityPopupViewModel>();
 
-            builder
-            .UseMauiApp<App>()
-            .UseMauiCommunityToolkit();
-            return builder.Build();
+            // Alles correct geconfigureerd aan het einde
+            return builder
+                .UseMauiApp<App>()
+                .ConfigureFonts(fonts =>
+                {
+                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                })
+                .UseMauiCommunityToolkit()
+                .Build();
         }
     }
 }
