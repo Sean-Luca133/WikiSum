@@ -59,19 +59,10 @@ namespace WikiSum.ViewModels
         public WebsiteSummaryViewModel(INavigationService navigationService)
         {
             _navigationService = navigationService;
-            LoadLanguageAbriviations();
             Bindcommands();
             Messenger.Register<WebsiteSummaryViewModel, ChosenWebsiteMessage>(this, (r, m) => r.Receive(m));
         }
 
-        private void LoadLanguageAbriviations()
-        {
-            LanguageAbreviations.Add("Dutch", "nl");
-            LanguageAbreviations.Add("English", "en");
-            LanguageAbreviations.Add("French", "fr");
-            LanguageAbreviations.Add("Spanish", "es");
-            // Extra languages can be add here
-        }
         private void Bindcommands()
         {
             SeeDetailCommand = new AsyncRelayCommand<WebsiteParagraph>(SeeDetail);

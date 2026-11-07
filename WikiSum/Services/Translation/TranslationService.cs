@@ -8,9 +8,9 @@ namespace WikiSum.Services
 
     public static class ApiTranslationKeys
     {
-        public static string TranslatorKey = Environment.GetEnvironmentVariable("TRANSLATOR_KEY");
-        public static string TranslatorRegion = Environment.GetEnvironmentVariable("TRANSLATOR_REGION");
-        public static string TranslatorEndpoint = Environment.GetEnvironmentVariable("TRANSLATOR_ENDPOINT");
+        public static string TranslatorKey { get; } = Settings.TranslatorKey;
+        public static string TranslatorRegion { get; } = Settings.TranslatorRegion;
+        public static string TranslatorEndpoint { get; } = Settings.TranslatorEndpoint;
     }
 
     public class TranslationService : ITranslationService
@@ -23,7 +23,7 @@ namespace WikiSum.Services
         }
 
         public async Task<string> TranslateText(string text, string fromLang, string toLang)
-        { 
+        {
             var endpoint = $"{ApiTranslationKeys.TranslatorEndpoint}{fromLang}&to={toLang}";
             Debug.WriteLine($"[TranslationService]: endpoint: {endpoint}");
 

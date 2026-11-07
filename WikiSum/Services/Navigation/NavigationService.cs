@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using WikiSum.ViewModels;
+﻿using System.Diagnostics;
 using WikiSum.Views;
 
 namespace WikiSum.Services.Navigation
@@ -33,7 +29,7 @@ namespace WikiSum.Services.Navigation
 
         }
 
-        public async  Task NavigateToDetailAsync()
+        public async Task NavigateToDetailAsync()
         {
             await _navigation.PushAsync(_serviceProvider.GetRequiredService<SummaryDetailPage>());
         }
