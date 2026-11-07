@@ -8,7 +8,6 @@ using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
 using WikiSum.Views;
-using WikiSum.Services.LanguageDetection;
 using WikiSum.Services.EntityReconition;
 using WikiSum.Services.Navigation;
 using CommunityToolkit.Maui;

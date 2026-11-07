@@ -14,7 +14,14 @@ namespace WikiSum.Services.Sumerization
         {
             AbstractiveSummarizeOptions options = new();
             options.SentenceCount = 20;
-            return client.AbstractiveSummarize(WaitUntil.Completed, document, options: options);
+            try
+            {
+                return client.AbstractiveSummarize(WaitUntil.Completed, document, options: options);
+            }
+            catch(Exception ex)
+            {
+                return null;
+            }
         }
 
     };

@@ -13,22 +13,23 @@ namespace WikiSum.ViewModels
 {
     public class WebsiteSummaryViewModel : ObservableRecipient, IWebsiteSummaryViewModel, IRecipient<ChosenWebsiteMessage>
     {
+        // Commands
         public ICommand SeeDetailCommand { get; set; }
         public ICommand NavigateBackCommand { get; set; }
-        private ObservableCollection<string> languageOptions;
 
-        // Set selected language to first in list
-        public int selectedLanguage = 1;
+        // Language properties 
+        public Dictionary<string, string> LanguageAbreviations { get; set; } = new Dictionary<string, string>();
+
+        public ObservableCollection<string> languageOptions = new();
+        
+        public int selectedLanguage = -1; // Set selected language to first in list
+
+        // Objects/Services
         public List<TranslationsRequest> Translations { get; set; } = new();
         private ObservableCollection<WebsiteParagraph> paragraphs = new ObservableCollection<WebsiteParagraph>();
         private INavigationService _navigationService;
 
-        public ObservableCollection<string> LanguageOptions
-        {
-            get => languageOptions;
-            set => SetProperty(ref languageOptions, value);
-
-        }
+        
         public ObservableCollection<WebsiteParagraph> Paragraphs
         {
             get => paragraphs;
@@ -45,15 +46,32 @@ namespace WikiSum.ViewModels
             }
         }
 
-        
+        public ObservableCollection<string> LanguageOptions
+        {
+            get => languageOptions;
+            set
+            {
+                SetProperty(ref languageOptions, value);
+            }
+        }
+
 
         public WebsiteSummaryViewModel(INavigationService navigationService)
         {
             _navigationService = navigationService;
+            LoadLanguageAbriviations();
             Bindcommands();
             Messenger.Register<WebsiteSummaryViewModel, ChosenWebsiteMessage>(this, (r, m) => r.Receive(m));
         }
 
+        private void LoadLanguageAbriviations()
+        {
+            LanguageAbreviations.Add("Dutch", "nl");
+            LanguageAbreviations.Add("English", "en");
+            LanguageAbreviations.Add("French", "fr");
+            LanguageAbreviations.Add("Spanish", "es");
+            // Extra languages can be add here
+        }
         private void Bindcommands()
         {
             SeeDetailCommand = new AsyncRelayCommand<WebsiteParagraph>(SeeDetail);
@@ -70,17 +88,17 @@ namespace WikiSum.ViewModels
 
             LanguageOptions = firstChapter != null ? new ObservableCollection<string>(firstChapter.Translations.Select(t => t.Language).ToList()) : new ObservableCollection<string>();
             Debug.WriteLine($"[WebsiteSummaryViewModel]: Available Languages: {LanguageOptions.Count}");
-
+            SelectedLanguage = 0;
             Translations = firstChapter != null && LanguageOptions.Count > 0 ? paragraphChapters.SelectMany(c => c.Translations).ToList() : new List<TranslationsRequest>();
             SetSelectedLanguageParagraphs();
         }
 
         private void SetSelectedLanguageParagraphs()
         {
-            List<string> CurrentLanguageSummaries = Translations.Where(c => c.Language == languageOptions.ElementAt(SelectedLanguage)).SelectMany(c => c.Summaries.Select(s => s.SummaryText)).ToList();
+            List<string> CurrentLanguageSummaries = Translations.Where(c => c.Language == LanguageOptions.ElementAt(SelectedLanguage)).SelectMany(c => c.Summaries.Select(s => s.SummaryText)).ToList();
             Debug.WriteLine($"[WebsiteSummaryViewModel]: Used Summaries count: {CurrentLanguageSummaries.Count}");
 
-            List<string> Headings =  LanguageOptions.Count > 0 ? Translations.Where(c => c.Language == languageOptions.ElementAt(SelectedLanguage)).Select(c => c.Title).ToList() : new List<string>();
+            List<string> Headings =  LanguageOptions.Count > 0 ? Translations.Where(c => c.Language == LanguageOptions.ElementAt(SelectedLanguage)).Select(c => c.Title).ToList() : new List<string>();
             Debug.WriteLine($"[WebsiteSummaryViewModel]: heading count: {Headings.Count}");
 
             // reset paragraphs on every call.
