@@ -19,7 +19,7 @@
             VerticalOptions="Center" 
             HorizontalOptions="Center">
             
-            <Button ImageSource="return.png" HorizontalOptions="Center" MaximumWidthRequest="30" Command="{Binding NavigateBackCommand}">
+            <Button ImageSource="terug.png" HorizontalOptions="Center" MaximumWidthRequest="30" Command="{Binding NavigateBackCommand}">
             
             </Button>
             <Label FormattedText="{Binding AnalyzedParagraph}" MaximumWidthRequest="750"

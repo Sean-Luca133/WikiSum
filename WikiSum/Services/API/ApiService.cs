@@ -10,7 +10,7 @@ namespace WikiSum.Services.API
     public class ApiService : IAPIService
     {
         private readonly HttpClient _httpClient;
-        private string _apiEndpoint = Environment.GetEnvironmentVariable("BACKEND_API_ENDPOINT");
+        private string _apiEndpoint = Settings.BackendApiEndpoint;
 
         public ApiService(HttpClient httpClient)
         {
