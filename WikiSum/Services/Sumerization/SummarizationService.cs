@@ -7,7 +7,7 @@ namespace WikiSum.Services.Sumerization
 
     public class SummarizationService: ISummarizationService
     {
-        private TextAnalyticsClient client = new(new Uri(ApiLanguageKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguageKeys.LanguagerKey));
+        private TextAnalyticsClient client = new(new Uri(ApiLanguageKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguageKeys.LanguageKey));
 
         // Perform the text analysis operation.
         public async Task<AbstractiveSummarizeOperation> SummarizeText(List<string> document)

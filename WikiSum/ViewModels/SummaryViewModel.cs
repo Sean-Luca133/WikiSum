@@ -99,17 +99,6 @@ namespace WikiSum.ViewModels
             set => SetProperty(ref visitedWebsites, value);
         }
 
-        public ObservableCollection<WebsiteParagraph> Content
-        {
-            get => content;
-            set => SetProperty(ref content, value);
-        }
-        public ObservableCollection<Website> VisitedWebsites
-        {
-            get => visitedWebsites;
-            set => SetProperty(ref visitedWebsites, value);
-        }
-
         public int SelectedPageLanguage
         {
             get => selectedPageLanguage;
@@ -144,7 +133,7 @@ namespace WikiSum.ViewModels
         }
 
 
-        public SummaryViewModel(INavigationService navigationService,ILanguageDetectionService languageDetectionService,ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
+        public SummaryViewModel(IAPIService apiservice,INavigationService navigationService,ILanguageDetectionService languageDetectionService,ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
         {
             _navigationService = navigationService;
             _languageDetectionService = languageDetectionService;
@@ -170,22 +159,6 @@ namespace WikiSum.ViewModels
             // Extra languages can be add here
         }
 
-        private void SetTimerEventHandeler()
-        {
-            timer.Elapsed += new ElapsedEventHandler(SummeryPerInterval);
-        }
-
-        
-
-        private void LoadLanguageAbriviations()
-        {
-            LanguageAbreviations.Add("Dutch", "nl");
-            LanguageAbreviations.Add("English", "en");
-            LanguageAbreviations.Add("French", "fr");
-            LanguageAbreviations.Add("Spanish", "es");
-            // Extra languages can be add here
-        }
-        
         private void SetTimerEventHandeler()
         {
             timer.Elapsed += new ElapsedEventHandler(SummeryPerInterval);
@@ -360,10 +333,6 @@ namespace WikiSum.ViewModels
             {
                 translationSemaphore.Release();
             }
-        }
-        private void TranslateExistingSummary()
-        {
-            throw new NotImplementedException();
         }
 
         private async Task<(bool, List<(string, string)>)> GetWebsiteContent()

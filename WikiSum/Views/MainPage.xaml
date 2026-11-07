@@ -6,16 +6,16 @@
              xmlns:website_models="clr-namespace:WikiSum.Models.Api.Website"
              x:DataType="viewModel:IMainViewModel"
              Title="MainPage">
-
-    <ContentPage.ToolbarItems >
+    
+        <ContentPage.ToolbarItems >
         <ToolbarItem Text="Search" Command="{Binding SearchCommand}" />
         <ToolbarItem Text="Translate" Command="{Binding TranslateTestCommand}" />
         <ToolbarItem Text="Summerize" Command="{Binding SummarizeTestCommand}" />
         <ToolbarItem Text="Detect Language" Command="{Binding LanguageDetectionServiceTestCommand}" />
         <ToolbarItem Text="Find Entities" Command="{Binding GetEntitiesCommand}" />
     </ContentPage.ToolbarItems>
-
-    <VerticalStackLayout Spacing="10">
+    <ScrollView Margin="20">
+        <VerticalStackLayout Spacing="10">
 
         <Label Text="Welcome to WikiSum"
                FontSize="24"
@@ -65,12 +65,16 @@
                                           Path=BindingContext.DeleteWebsiteCommand}"
                         CommandParameter="{Binding .}"/>
 
-                    </HorizontalStackLayout>
+                            <Button Text="View Summary" TextColor="Black" Background="LightBlue" BorderWidth="1" BorderColor="DarkBlue" Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                  Path=BindingContext.SeeSummaryCommand}"
+CommandParameter="{Binding .}"/>
+
+                        </HorizontalStackLayout>
 
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
     </VerticalStackLayout>
-
+        </ScrollView>
 </ContentPage>

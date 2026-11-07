@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WikiSum.Views.WebsiteSummaryPage"
+             xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
+             xmlns:models="clr-namespace:WikiSum.Models"
+             x:DataType="viewModel:IWebsiteSummaryViewModel"
+             Title="WebsiteSummaryPage">
+    <ScrollView>
+        <VerticalStackLayout>
+            <HorizontalStackLayout HorizontalOptions="Center" Margin="0,20,0,20" Spacing="15">
+                <Button ImageSource="return.png" WidthRequest="50" HeightRequest="50" Command="{Binding NavigateBackCommand}"/>
+                <Label 
+                Text="See here aprevious article"
+                FontSize="24"
+                FontAttributes="Bold"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
+
+                <Picker Title="Language" MinimumWidthRequest="200" ItemsSource="{Binding LanguageOptions}"  SelectedIndex="{Binding SelectedLanguage}">
+                    <Picker.Items >
+
+                    </Picker.Items>
+                </Picker>
+
+            </HorizontalStackLayout>
+            <CollectionView ItemsSource="{Binding Paragraphs}" >
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:WebsiteParagraph">
+                        <VerticalStackLayout>
+                            <HorizontalStackLayout HorizontalOptions="Center" Margin="0,20,0,20" Spacing="15">
+
+                                <Label HorizontalOptions="Center" Text="{Binding Header }" FontAttributes="Bold" FontSize="30" />
+
+                                <Button Text="View Important words"  Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+              Path=BindingContext.SeeDetailCommand}" CommandParameter="{Binding .}" TextColor="Black" BorderWidth="1" BackgroundColor="LightBlue" BorderColor="DarkBlue"/>
+
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding ParagraphSummary}" 
+                       MaximumWidthRequest="750"
+                       Margin="0,10,0,20"/>
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+    
+        
+</ContentPage>
