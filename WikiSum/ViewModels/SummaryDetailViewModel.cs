@@ -152,13 +152,13 @@ namespace WikiSum.ViewModels
                 "Organization" or "OrganizationMedical" or "OrganizationSports" or "OrganizationStockExchange" => Colors.Purple,
 
                 // Events
-                "CulturalEvent" or "NaturalEvent" or "SportsEvent" => Colors.Pink,
+                "Event" or "CulturalEvent" or "NaturalEvent" or "SportsEvent" => Colors.HotPink,
 
                 // Numbers (except time)
                 "Age" or "Currency" or "Quantity" or "Dimension" or "Height" or "Length" or "Number" or "NumberRange" or "Ordinal" or "Percentage" or "Speed" or "Temperature" or "Volume" or "Weight" => Colors.Red,
 
                 // Time
-                "Date" or "DateRange" or "DateTime" or "DateTimeRange" or "Duration" or "SetTemporal" or "Temporal" or "Time" or "TimeRange" => Colors.Orange,
+                "Date" or "DateRange" or "DateTime" or "DateTimeRange" or "Duration" or "SetTemporal" or "Temporal" or "Time" or "TimeRange" => Colors.DarkOrange,
                 _ => Colors.DarkGray
             };
         }

@@ -22,34 +22,13 @@ namespace WikiSum.ViewModels
 {
     public class MainViewModel : ObservableRecipient, IMainViewModel
     {
-        private IEntityRecognitionService _entityRecognitionService;
-        private ILanguageDetectionService _languageDetectionService;
-        private IScrapeService _scrapeService;
-        private ITranslationService _translationService;
-        private ISummarizationService _summarizationService;
         private INavigationService _navigationService;
         private IAPIService _apiService;
-        public ICommand TranslateTextCommand { get; set; }
-        public string TestText { get; set; } = "How are you?";
-        string document =
-        "We love this trail and make the trip every year. The views are breathtaking and well worth the hike!"
-        + " Yesterday was foggy though, so we missed the spectacular views. We tried again today and it was"
-        + " amazing. Everyone in my family liked the trail although it was too challenging for the less"
-        + " athletic among us. Not necessarily recommended for small children. A hotel close to the trail"
-        + " offers services for childcare in case you want that.";
 
         private string _status = "Fetching api status ...";
         private ObservableCollection<WebsiteRequest> _websites;
-        public ICommand TranslateTestCommand { get; set; }
-        public ICommand SummarizeServiceTestCommand { get; set; }
-        public ICommand SearchCommand { get; set; }
-        public ICommand LanguageDetectionServiceTestCommand { get; set; }
         public ICommand DeleteWebsiteCommand { get; set; }
         public ICommand SeeSummaryCommand { get; set; }
-
-        public ICommand GetEntitiesCommand { get; set; }
-
-
         public ICommand CheckStatusCommand { get; set; }
 
         public string Status
@@ -70,27 +49,19 @@ namespace WikiSum.ViewModels
 
         public MainViewModel(INavigationService navigation,IEntityRecognitionService entityRecognitionService,ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService, IAPIService apiService)
         {
-            _languageDetectionService = languageDetectionService;
-            _translationService = translationService;
-            _summarizationService = summarizationService;
-            _scrapeService = scrapeService;
-            _entityRecognitionService = entityRecognitionService;
             _apiService = apiService;
             _navigationService = navigation;
             Websites = new();
             BindCommands();
 
         }
+
         public void BindCommands()
         {
-            LanguageDetectionServiceTestCommand = new AsyncRelayCommand(DetectLanguageTest);
-            SearchCommand = new AsyncRelayCommand(GetWebsite);
-            TranslateTestCommand = new AsyncRelayCommand(TranslateTest);
-            SummarizeServiceTestCommand = new AsyncRelayCommand(SummarizeTest);
-            GetEntitiesCommand = new AsyncRelayCommand(GetEntities);
             DeleteWebsiteCommand = new AsyncRelayCommand<WebsiteRequest>(DeleteWebsite);
             SeeSummaryCommand = new AsyncRelayCommand<WebsiteRequest>(SeeSummary);
         }
+
 
         public async Task InitializeAsync()
         {
@@ -107,6 +78,7 @@ namespace WikiSum.ViewModels
                 Debug.WriteLine($"[MainViewModel] Error: {ex.Message}");
             }
         }
+
         public async Task GetAllPreviousWebsites()
         {
             List<WebsiteRequest> websites = await _apiService.GetAllWebsitesAsyc();
@@ -130,13 +102,6 @@ namespace WikiSum.ViewModels
             }
         }
       
-
-
-        public async Task<List<(string, string)>?> GetWebsite()
-        {
-            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
-        }
-
         private async Task DeleteWebsite(WebsiteRequest website)
         {
             if (website == null)
@@ -147,90 +112,6 @@ namespace WikiSum.ViewModels
 
             // Verwijder uit de UI
             Websites.Remove(website);
-        }
-        private async Task<string> TranslateText(string text, string start, string to)
-        {
-            return await _translationService.TranslateText(text, start, to);
-        }
-
-        private async Task<AbstractiveSummarizeOperation> Summarizetext(List<string> document)
-        {
-            return await _summarizationService.SummarizeText(document);
-        }
-
-        private async Task<DetectedLanguage?> DetectLanguage(string document)
-        {
-            return await _languageDetectionService.DetectLanguageInput(document);
-        }
-
-        private async Task DetectLanguageTest()
-        {
-            DetectedLanguage? language = await DetectLanguage(TestText);
-            if (language != null)
-            {
-                Debug.WriteLine($"[MainViewModel]: {language?.Name}");
-            }
-            else
-            {
-                Debug.WriteLine($"[MainViewModel]: No language found");
-            }
-
-        }
-
-        private async Task GetEntities()
-        {
-            CategorizedEntityCollection entitiesInDocument = _entityRecognitionService.GetNamedEntities(document);
-            Debug.WriteLine($"[MainViewModel]: Recognized {entitiesInDocument.Count} entities:");
-            foreach (CategorizedEntity entity in entitiesInDocument)
-            {
-                Debug.WriteLine($"[MainViewModel]:  Text: {entity.Text}");
-                Debug.WriteLine($"[MainViewModel]:  Offset: {entity.Offset}");
-                Debug.WriteLine($"[MainViewModel]:  Length: {entity.Length}");
-                Debug.WriteLine($"[MainViewModel]:  Category: {entity.Category}");
-                if (!string.IsNullOrEmpty(entity.SubCategory))
-                    Debug.WriteLine($"[MainViewModel]:  SubCategory: {entity.SubCategory}");
-                Debug.WriteLine($"[MainViewModel]:  Confidence score: {entity.ConfidenceScore}");
-
-            }
-        }
-    
-        private async Task SummarizeTest()
-        {
-            List<(string, string)>? documents = await GetWebsite();
-            if (documents == null)
-            {
-                throw new ApplicationException("Wiki doesn't exist");
-            }
-            // negeer de references aka het laatste item
-            documents = documents.GetRange(0, documents.Count - 1);
-            foreach (var (title, sum) in documents)
-            {
-                // Prepare the input of the text analysis operation. You can add multiple documents to this list and
-                // perform the same operation on all of them simultaneously.
-                List<string> batchedDocuments = new() { sum };
-
-                AbstractiveSummarizeOperation returnData = await Summarizetext(batchedDocuments);
-                var summaries = returnData.GetValues()
-                                            .SelectMany(collection => collection)
-                                            .Where(doc => !doc.HasError)
-                                            .SelectMany(doc => doc.Summaries);
-
-                foreach (var summary in summaries)
-                {
-                    Debug.WriteLine($"[MainViewModel]: Text: {summary.Text.Replace("\n", " ")}");
-                }
-
-            }
-            Debug.WriteLine("[MainViewModel]: Summarization Done");
-
-        }
-
-        // method for testing the translation Check debug for translation
-        private async Task TranslateTest()
-        {
-            //TestText await GetWebsite();
-            TestText = await TranslateText(TestText, "en", "nl");
-            Debug.WriteLine(TestText);
         }
 
         private async Task SeeSummary(WebsiteRequest website)
