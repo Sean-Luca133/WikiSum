@@ -18,7 +18,7 @@
                 HorizontalOptions="Center" />
 
                 <Picker Title="Language" MinimumWidthRequest="200" ItemsSource="{Binding LanguageOptions}"  SelectedIndex="{Binding SelectedLanguage}">
-                    <Picker.Items >
+                    <Picker.Items>
 
                     </Picker.Items>
                 </Picker>

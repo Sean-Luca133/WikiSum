@@ -69,7 +69,7 @@ namespace WikiSum.ViewModels
 
         // Summary lists (needed for timer)
         private string[] transSummaries { get; set; }
-        private string[] transHeadingings { get; set; }
+        private string[] transHeadings { get; set; }
         private int currentListIndex { get; set; } = 0;
         private Timer timer = new Timer(2000);
         private string To;
@@ -227,7 +227,7 @@ namespace WikiSum.ViewModels
                     }
                 }
                 // FORMAT THE TRANSLATION FOR OUTPUT
-                transHeadingings = await Task.WhenAll(headingTasks);
+                transHeadings = await Task.WhenAll(headingTasks);
                 transSummaries = await Task.WhenAll(summaryTasks);
 
                 if (!response.Languages.Contains(LanguageAbreviations[LanguageOptions.GetItemByIndex(SelectedPageLanguage)]))
@@ -259,7 +259,7 @@ namespace WikiSum.ViewModels
                     {
                         new UpdateTranslationRequest
                         {
-                            Title = transHeadingings[i],
+                            Title = transHeadings[i],
                             Language = language,
                             Summaries = new List<UpdateSummaryRequest>
                             {
@@ -405,6 +405,22 @@ namespace WikiSum.ViewModels
             }
 
             Debug.WriteLine($"[SummaryViewModel] language: {foundLanguage}");
+
+            if (foundLanguage == null)
+            {
+                FeedbackMessage = "Page has unkown language, try something else";
+                IsError = true;
+                IsProcessing = false;
+                return;
+            }
+
+            if (!LanguageAbreviations.ContainsKey(foundLanguage))
+            {
+                FeedbackMessage = "Sorry, Language not supported";
+                IsError = true;
+                IsProcessing = false;
+                return;
+            }
             string inputAbbreviation = LanguageAbreviations[foundLanguage];
 
 
@@ -447,6 +463,14 @@ namespace WikiSum.ViewModels
             foreach (var batch in paragraphResults.Chunk(25))
             {
                 var result = await Summarizetext(batch.ToList());
+                // Fallback if summary fails
+                if (result == null)
+                {
+                    FeedbackMessage = "Sorry, Page paragraphs to big to summarize.";
+                    IsError = true;
+                    IsProcessing = false;
+                    return;
+                }
 
                 var summaryPart = result.GetValues()
                     .SelectMany(collection => collection)
@@ -457,8 +481,8 @@ namespace WikiSum.ViewModels
             }
 
 
-            Debug.WriteLine($"[SummaryViewModel]: {summaries.Count()}");
-            Debug.WriteLine($"[SummaryViewModel]: {summaries.Distinct()}");
+            Debug.WriteLine($"[SummaryViewModel]: Summary amount {summaries.Count()}");
+            Debug.WriteLine($"[SummaryViewModel]: Distinct summaries {summaries.Distinct().ToList().Count}");
 
 
             List<string> totalSummariesList = new List<string>();
@@ -508,7 +532,14 @@ namespace WikiSum.ViewModels
 
             // Translate
             transSummaries = await Task.WhenAll(afterTranslationTasksPar);
-            transHeadingings = await Task.WhenAll(afterTranslationTasksHead);
+
+            transHeadings = await Task.WhenAll(afterTranslationTasksHead);
+
+            // Remove Duplicates
+            transSummaries = transSummaries.Distinct().ToArray();
+            transHeadings = transHeadings.Distinct().ToArray();
+
+
             await PostNewWebsiteToAPI();
 
             // Timer
@@ -518,7 +549,7 @@ namespace WikiSum.ViewModels
 
         private async Task PostNewWebsiteToAPI()
         {
-            List<WebsiteParagraph> websiteParagraphs = transHeadingings.Zip(
+            List<WebsiteParagraph> websiteParagraphs = transHeadings.Zip(
                                 transSummaries,
                                 (heading, summary) => new WebsiteParagraph(heading, summary)
                             ).ToList();
@@ -543,7 +574,7 @@ namespace WikiSum.ViewModels
                 // Add directly to main thread to have a live update
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
-                    Content.Add(new WebsiteParagraph(transHeadingings.ElementAt(currentListIndex), transSummaries.ElementAt(currentListIndex)));
+                    Content.Add(new WebsiteParagraph(transHeadings.ElementAt(currentListIndex), transSummaries.ElementAt(currentListIndex)));
                 });
                 currentListIndex++;
             }
