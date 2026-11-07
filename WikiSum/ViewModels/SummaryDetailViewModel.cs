@@ -6,10 +6,9 @@ using CommunityToolkit.Mvvm.Messaging;
 using System.Diagnostics;
 using System.Windows.Input;
 using WikiSum.Messages;
-using WikiSum.Models;
 using WikiSum.Services.EntityReconition;
 using WikiSum.Services.Navigation;
-using static System.Net.Mime.MediaTypeNames;
+
 
 namespace WikiSum.ViewModels
 {

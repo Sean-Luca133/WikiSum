@@ -1,13 +1,18 @@
 using Azure.AI.TextAnalytics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Input;
+using WikiSum.Messages;
+using WikiSum.Models;
 using WikiSum.Models.Api.Health;
 using WikiSum.Models.Api.Website;
 using WikiSum.Services.API;
+using WikiSum.Services.EntityReconition;
 using WikiSum.Services.LanguageDetection;
+using WikiSum.Services.Navigation;
 using WikiSum.Services.Scrapping;
 using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
@@ -15,13 +20,14 @@ using WikiSum.Services.Translation;
 
 namespace WikiSum.ViewModels
 {
-    public class MainViewModel : ObservableObject, IMainViewModel
+    public class MainViewModel : ObservableRecipient, IMainViewModel
     {
         private IEntityRecognitionService _entityRecognitionService;
         private ILanguageDetectionService _languageDetectionService;
         private IScrapeService _scrapeService;
         private ITranslationService _translationService;
         private ISummarizationService _summarizationService;
+        private INavigationService _navigationService;
         private IAPIService _apiService;
         public ICommand TranslateTextCommand { get; set; }
         public string TestText { get; set; } = "How are you?";
@@ -39,11 +45,10 @@ namespace WikiSum.ViewModels
         public ICommand SearchCommand { get; set; }
         public ICommand LanguageDetectionServiceTestCommand { get; set; }
         public ICommand DeleteWebsiteCommand { get; set; }
+        public ICommand SeeSummaryCommand { get; set; }
 
         public ICommand GetEntitiesCommand { get; set; }
 
-        public MainViewModel(IEntityRecognitionService entityRecognitionService, ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService)
-        public ICommand DeleteWebsiteCommand { get; set; }
 
         public ICommand CheckStatusCommand { get; set; }
 
@@ -63,7 +68,7 @@ namespace WikiSum.ViewModels
             set => SetProperty(ref _websites, value);
         }
 
-        public MainViewModel(ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService, IAPIService apiService)
+        public MainViewModel(INavigationService navigation,IEntityRecognitionService entityRecognitionService,ILanguageDetectionService languageDetectionService, ITranslationService translationService, ISummarizationService summarizationService, IScrapeService scrapeService, IAPIService apiService)
         {
             _languageDetectionService = languageDetectionService;
             _translationService = translationService;
@@ -71,6 +76,7 @@ namespace WikiSum.ViewModels
             _scrapeService = scrapeService;
             _entityRecognitionService = entityRecognitionService;
             _apiService = apiService;
+            _navigationService = navigation;
             Websites = new();
             BindCommands();
 
@@ -83,6 +89,7 @@ namespace WikiSum.ViewModels
             SummarizeServiceTestCommand = new AsyncRelayCommand(SummarizeTest);
             GetEntitiesCommand = new AsyncRelayCommand(GetEntities);
             DeleteWebsiteCommand = new AsyncRelayCommand<WebsiteRequest>(DeleteWebsite);
+            SeeSummaryCommand = new AsyncRelayCommand<WebsiteRequest>(SeeSummary);
         }
 
         public async Task InitializeAsync()
@@ -109,6 +116,7 @@ namespace WikiSum.ViewModels
 
         public async Task CheckStatus()
         {
+            try { 
             HealthRequest status = await _apiService.GetApiStatus();
             Status = "Api status: " + status.Status;
 
@@ -121,28 +129,8 @@ namespace WikiSum.ViewModels
                 Debug.WriteLine($"[MainViewModel] Error: {ex.Message}");
             }
         }
-        public async Task GetAllPreviousWebsites()
-        {
-            List<WebsiteRequest> websites = await _apiService.GetAllWebsitesAsyc();
+      
 
-        public async Task<List<(string, string)>?> GetWebsite()
-        {
-            return await _scrapeService.GetRequestAsync(new Uri("https://en.wikipedia.org/wiki/Belgium"));
-        }
-
-        private async Task DeleteWebsite(WebsiteRequest website)
-        {
-            if (website == null)
-                return;
-
-            Websites = new ObservableCollection<WebsiteRequest>(websites);
-        }
-
-        public async Task CheckStatus()
-        {
-            HealthRequest status = await _apiService.GetApiStatus();
-            Status = "Api status: " + status.Status;
-        }
 
         public async Task<List<(string, string)>?> GetWebsite()
         {
@@ -245,5 +233,13 @@ namespace WikiSum.ViewModels
             Debug.WriteLine(TestText);
         }
 
+        private async Task SeeSummary(WebsiteRequest website)
+        {
+            Debug.WriteLine($"[SummaryViewModel]: Send message: {website}");
+            await _navigationService.NavigateToSummaryAsync();
+            WeakReferenceMessenger.Default.Send(new ChosenWebsiteMessage(website));
+        }
+
     }
 }
+
