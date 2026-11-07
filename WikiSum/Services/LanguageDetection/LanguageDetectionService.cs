@@ -6,7 +6,7 @@ namespace WikiSum.Services.LanguageDetection
     public class LanguageDetectionService : ILanguageDetectionService
     {
 
-        private TextAnalyticsClient client = new(new Uri(ApiLanguageKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguageKeys.LanguagerKey));
+        private TextAnalyticsClient client = new(new Uri(ApiLanguageKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguageKeys.LanguageKey));
 
 
         public async Task<DetectedLanguage?> DetectLanguageInput(string document)

@@ -37,5 +37,10 @@ namespace WikiSum.Services.Navigation
         {
             await _navigation.PushAsync(_serviceProvider.GetRequiredService<SummaryDetailPage>());
         }
+
+        public async Task NavigateToSummaryAsync()
+        {
+            await _navigation.PushAsync(_serviceProvider.GetRequiredService<WebsiteSummaryPage>());
+        }
     }
 }

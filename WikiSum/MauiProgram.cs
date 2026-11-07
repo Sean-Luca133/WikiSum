@@ -42,6 +42,7 @@ namespace WikiSum
             builder.Services.AddSingleton<ITranslationService, TranslationService>();
             builder.Services.AddSingleton<ISummarizationService, SummarizationService>();
             builder.Services.AddHttpClient<IAPIService, ApiService>();
+            builder.Services.AddTransient<INavigationService, NavigationService>();
 
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<IMainViewModel, MainViewModel>();
@@ -51,6 +52,9 @@ namespace WikiSum
 
             builder.Services.AddTransient<SummaryDetailPage>();
             builder.Services.AddTransient<ISummaryDetailViewModel, SummaryDetailViewModel>();
+
+            builder.Services.AddTransient<WebsiteSummaryPage>();
+            builder.Services.AddTransient<IWebsiteSummaryViewModel, WebsiteSummaryViewModel>();
 
             builder.Services.AddTransient<EntityPopup>();
             builder.Services.AddTransient<EntityPopupViewModel>();

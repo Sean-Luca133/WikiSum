@@ -6,7 +6,7 @@ namespace WikiSum.Services.EntityReconition
 
     public class EntityRecognitionService : IEntityRecognitionService
     {
-        private TextAnalyticsClient client = new(new Uri(ApiLanguageKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguageKeys.LanguagerKey));
+        private TextAnalyticsClient client = new(new Uri(ApiLanguageKeys.LanguageEndpoint), new AzureKeyCredential(ApiLanguageKeys.LanguageKey));
 
         public CategorizedEntityCollection GetNamedEntities(string document)
         {
