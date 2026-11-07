@@ -3,6 +3,7 @@ using CommunityToolkit.Maui.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Globalization;
 using WikiSum.Services;
 using WikiSum.Services.API;
 using WikiSum.Services.EntityReconition;
@@ -13,10 +14,7 @@ using WikiSum.Services.Sumerization;
 using WikiSum.Services.Translation;
 using WikiSum.ViewModels;
 using WikiSum.Views;
-using WikiSum.Services.EntityReconition;
-using WikiSum.Services.Navigation;
-using CommunityToolkit.Maui;
-using CommunityToolkit.Maui.Services;
+
 
 namespace WikiSum
 {
@@ -54,6 +52,8 @@ namespace WikiSum
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
             // Services registreren (dubbele ILanguageDetectionService verwijderd)
             builder.Services.AddSingleton<IEntityRecognitionService, EntityRecognitionService>();
