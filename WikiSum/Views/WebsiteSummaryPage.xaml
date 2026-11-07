@@ -9,7 +9,7 @@
     <ScrollView>
         <VerticalStackLayout>
             <HorizontalStackLayout HorizontalOptions="Center" Margin="0,20,0,20" Spacing="15">
-                <Button ImageSource="return.png" WidthRequest="50" HeightRequest="50" Command="{Binding NavigateBackCommand}"/>
+                <Button ImageSource="terug.png" WidthRequest="50" HeightRequest="50" Command="{Binding NavigateBackCommand}"/>
                 <Label 
                 Text="See here aprevious article"
                 FontSize="24"
