@@ -29,7 +29,7 @@
                    MaximumWidthRequest="650"
                    HorizontalTextAlignment="Center"
                    HorizontalOptions="Center"
-                   Text="This will be the description of the application and its current features."
+                   Text="This is WikiSum a tool created to make viewing Wikipages easier. Just give the url of the page you need in the desired available language and you are good to go.  Find more details per paragraf afterwards to help you focus and if you need quick a view of a recently viewed page check below."
                    TextColor="{AppThemeBinding Light='#4B5563', Dark='#9CA3AF'}" />
 
             <Label FontSize="15"

@@ -5,14 +5,16 @@
              xmlns:viewModel="clr-namespace:WikiSum.ViewModels"
              xmlns:models="clr-namespace:WikiSum.Models"
              x:DataType="viewModel:ISummaryViewModel"
-             Title="SummaryPage">
+             Title="SummaryPage"
+             Padding="20">
 
     <CollectionView ItemsSource="{Binding Content}"
                     ItemSizingStrategy="MeasureAllItems"
+                    
                     SelectionMode="None">
 
         <CollectionView.Header>
-            <VerticalStackLayout Spacing="20" Padding="16">
+            <VerticalStackLayout Spacing="20" >
 
                 <!-- Header -->
                 <VerticalStackLayout Spacing="8">
@@ -145,7 +147,7 @@
         </CollectionView.Header>
 
         <!-- Summary Items -->
-        <CollectionView.ItemTemplate>
+        <CollectionView.ItemTemplate Spacing="8" >
             <DataTemplate x:DataType="models:WebsiteParagraph">
 
                 <Border Stroke="{AppThemeBinding Light='#CBD5E1', Dark='#334155'}"
@@ -153,7 +155,7 @@
                         StrokeShape="RoundRectangle 12"
                         BackgroundColor="{AppThemeBinding Light='#F8FAFC', Dark='#0F172A'}"
                         Padding="15"
-                        Margin="16,5">
+                        Margin="0,5">
 
                     <VerticalStackLayout Spacing="12">
 
@@ -191,9 +193,5 @@
 
             </DataTemplate>
         </CollectionView.ItemTemplate>
-
-        <CollectionView.Footer>
-            <BoxView HeightRequest="20" Color="Transparent"/>
-        </CollectionView.Footer>
     </CollectionView>
 </ContentPage>
