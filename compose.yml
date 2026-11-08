@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: pg_dev
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: myapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d myapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  api:
+    image: milanmartens/wikisum_backend:latest
+    environment:
+      ASPNETCORE_URLS: http://+:7022
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=myapp;Username=admin;Password=admin
+      FrontendUrl: http://localhost:4200
+    ports:
+      - "7022:7022"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    command: http api:7022
+    environment:
+      # https://dashboard.ngrok.com/get-started/your-authtoken
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    ports:
+      - "4040:4040"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
