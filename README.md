@@ -8,7 +8,7 @@ Before running the application, you need to configure both the backend and the f
 
 Setting up the backend is straightforward. You only need one secret to get started: your ngrok authentication token.
 
-1. Go to the [ngrok authtoken dahsboard](https://dashboard.ngrok.com/get-started/your-authtoken) and create an account if you don't already have one.
+1. Go to the [ngrok authtoken dashboard](https://dashboard.ngrok.com/get-started/your-authtoken) and create an account if you don't already have one.
 2. Find your **AuthToken** on the dashboard and copy it.
 3. Rename `.env.example` to `.env` and paste your AuthToken into the appropriate environment variable.
 4. Run the following command from the root directory of the project:
