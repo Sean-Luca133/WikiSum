@@ -69,3 +69,7 @@ Run the following command in PowerShell:
 ```powershell
 .\run.ps1 Android
 ```
+
+## Showcase demo (PC + Phone build)
+
+A demo of the use of the application and it's setup can be found here: [Demo WikiSum](https://www.youtube.com/watch?v=ilo_xinYZdw)
