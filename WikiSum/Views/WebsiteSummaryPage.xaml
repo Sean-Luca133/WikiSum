@@ -76,7 +76,7 @@
                 StrokeShape="RoundRectangle 12"
                 BackgroundColor="{AppThemeBinding Light='#F8FAFC', Dark='#0F172A'}"
                 Padding="15"
-                Margin="16,5">
+                Margin="0,5">
 
                             <VerticalStackLayout Spacing="12">
 

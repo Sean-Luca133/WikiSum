@@ -5,7 +5,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:WikiSum.Views"
     Shell.NavBarIsVisible="False"
-    Title="WikiSum">
+    Title="WikiSum"
+    Shell.TabBarForegroundColor="#4F46E5"
+    Shell.TabBarTitleColor="#4F46E5">
+
+    
+
     <TabBar>
         <ShellContent
         Title="Home"
